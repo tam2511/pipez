@@ -14,7 +14,7 @@ If you want install specific version pipez - use
 pip install pipez[<your choice>]
 ```
 
-Now available `...` versions.
+Now available `cv` and `onnxruntime` versions.
 
 
 ## Quick start
