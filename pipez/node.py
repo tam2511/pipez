@@ -7,8 +7,8 @@ from time import sleep
 import logging
 
 
-from pypez.batch import Batch, BatchStatus
-from pypez.queue_wrapper import QueueWrapper
+from pipez.batch import Batch, BatchStatus
+from pipez.queue_wrapper import QueueWrapper
 
 
 class StepVerdict(Enum):
@@ -46,8 +46,8 @@ class Node(ABC):
             max_retries: int = 0,
             max_restart_retries: int = 0,
             timeout: float = 0.0,
-            in_queue: Optional[Union[QueueWrapper, List[QueueWrapper]]] = None,
-            out_queue: Optional[Union[QueueWrapper, List[QueueWrapper]]] = None,
+            input: Optional[Union[str, List[str]]] = None,
+            output: Optional[Union[str, List[str]]] = None,
             **kwargs
     ) -> None:
         self._kwargs = kwargs
@@ -57,14 +57,36 @@ class Node(ABC):
         self._max_retries = max_retries
         self._max_restart_retries = max_restart_retries
         self._timeout = timeout
-        self._in_queue = in_queue
-        self._out_queue = out_queue
+        self._input = input
+        self._output = output
 
         self._num_retries = 0
         self._num_restart_retries = 0
         self._status = Value('i', NodeStatus.ALIVE.value)
+        self._in_queue = None
+        self._out_queue = None
 
         self._init_worker()
+
+    @property
+    def input(self) -> Optional[Union[str, List[str]]]:
+        return self._input
+
+    @property
+    def output(self) -> Optional[Union[str, List[str]]]:
+        return self._output
+
+    def set_in_queue(
+            self,
+            queue: Optional[Union[QueueWrapper, List[QueueWrapper]]] = None
+    ):
+        self._in_queue = queue
+
+    def set_out_queue(
+            self,
+            queue: Optional[Union[QueueWrapper, List[QueueWrapper]]] = None
+    ):
+        self._out_queue = queue
 
     def post_init(self):
         return
