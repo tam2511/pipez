@@ -17,14 +17,14 @@ class OrtCV(Node):
             self,
             model_path: str,
             main_key: str,
-            providers: Optional[List[str]],
+            providers: Optional[List[str]] = None,
             pad_value: int = 0,
             **kwargs
     ):
         super().__init__(**kwargs)
         self._model_path = model_path
         self._main_key = main_key
-        self._providers = [provider for provider in ort.get_available_providers()] if providers is None else providers
+        self._providers = providers if providers else [provider for provider in ort.get_available_providers()]
         self._pad_value = pad_value
 
         self._session = None
