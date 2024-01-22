@@ -16,6 +16,12 @@ pip install pipez[<your choice>]
 
 Now available `cv` and `onnxruntime` versions.
 
+If you want to install a few version - see nex example:
+
+```
+pip install pipez[cv, onnxruntime]
+```
+
 
 ## Quick start
 
@@ -130,7 +136,7 @@ watchdog = build_pipeline(
             output='q3'
         ),
         {
-            "cls": DummyNode,
+            "cls": "DummyNode",
             "type": "thread",
             "input": "q3"
         }
