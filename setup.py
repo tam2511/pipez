@@ -10,7 +10,14 @@ requires = [
 ]
 
 extra_requires = {
-
+    'cv': [
+        'numpy',
+        'opencv-python'
+    ],
+    'ort': [
+        'numpy'
+        'onnxruntime'
+    ]
 }
 
 extra_requires["all"] = list(
