@@ -12,12 +12,13 @@ class VideoReader(Node):
             self,
             source: Union[int, str],
             batch_size: int = 1,
+            bgr2rgb: bool = False,
             **kwargs
     ):
         super().__init__(**kwargs)
-
         self._source = source
         self._batch_size = batch_size
+        self._bgr2rgb = bgr2rgb
 
         self._capture = None
         self._is_open = True
@@ -27,7 +28,6 @@ class VideoReader(Node):
 
         if not self._capture.isOpened():
             self._is_open = False
-
 
     def work_func(
             self,
@@ -47,7 +47,9 @@ class VideoReader(Node):
             if not flag:
                 break
 
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            if self._bgr2rgb:
+                image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
             batch.append(dict(
                 image=image,
                 index=round(self._capture.get(cv2.CAP_PROP_POS_FRAMES) - 1),

@@ -6,20 +6,24 @@ import numpy as np
 import onnxruntime as ort
 
 from pipez.node import Node
+from pipez.registry import Registry
 from pipez.batch import Batch, BatchStatus
 from pipez.utils.resize import resize
 
 
+@Registry.add
 class OrtCV(Node):
     def __init__(
             self,
             model_path: str,
+            main_key: str,
             providers: Optional[List[str]],
             pad_value: int = 0,
             **kwargs
     ):
         super().__init__(**kwargs)
         self._model_path = model_path
+        self._main_key = main_key
         self._providers = [provider for provider in ort.get_available_providers()] if providers is None else providers
         self._pad_value = pad_value
 
@@ -106,7 +110,7 @@ class OrtCV(Node):
 
                 context['event'].set()
 
-            images = [self._preprocessing(image=obj['image']) for obj in data]
+            images = [self._preprocessing(image=obj[self._main_key]) for obj in data]
             metas = [image[1] for image in images]
             images = [image[0] for image in images]
 
