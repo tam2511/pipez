@@ -88,6 +88,7 @@ for you node, else you will get error.
 ```python
 {
     "cls": "MyNode",
+    "a": 5,
     "type": "Process",
     "output": "some_trash"
 }
