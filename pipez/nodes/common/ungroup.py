@@ -49,7 +49,7 @@ class Ungroup(Node):
                 obj = obj[key]
 
             for target_obj in obj:
-                if self._image_key:
+                if isinstance(target_obj, dict):
                     batch.append({self._main_key: target_obj[self._main_key]})
                 else:
                     batch.append({self._main_key: target_obj})
