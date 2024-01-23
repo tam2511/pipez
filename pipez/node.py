@@ -3,12 +3,11 @@ from enum import Enum, auto
 from typing import Optional, Union, List
 from multiprocessing import Process, Value
 from threading import Thread
-from time import sleep
+from time import sleep, monotonic
 import logging
 
-
 from pipez.batch import Batch, BatchStatus
-from pipez.queue_wrapper import QueueWrapper
+from pipez.metrics import Metrics
 
 
 class StepVerdict(Enum):
@@ -65,8 +64,13 @@ class Node(ABC):
         self._status = Value('i', NodeStatus.ALIVE.value)
         self._in_queue = None
         self._out_queue = None
+        self._metrics = Metrics()
 
         self._init_worker()
+
+    @property
+    def metrics(self) -> Metrics:
+        return self._metrics
 
     @property
     def input(self) -> Optional[Union[str, List[str]]]:
@@ -186,7 +190,10 @@ class Node(ABC):
             input: Batch
     ) -> StepVerdict:
         try:
+            st = monotonic()
             out: Batch = self.work_func() if input is None else self.work_func(input)
+            self._metrics.update('duration', monotonic() - st)
+            self._metrics.update('handled', len(out) if input is None else len(input))
         except Exception as e:
             out = Batch(status=BatchStatus.ERROR, error=str(e))
             logging.error(f'During work function of node {self._name} happend error: {e}')

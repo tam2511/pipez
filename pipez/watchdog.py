@@ -9,16 +9,35 @@ class WatchDog(Node):
     def __init__(
             self,
             nodes: List[Node],
+            verbose_metrics: bool = True,
             **kwargs
     ) -> None:
         super().__init__(name='WatchDog', type=NodeType.THREAD, nodes=nodes, timeout=1e-1)
 
         self._nodes = self._kwargs['nodes']
+        self._verbose_metrics = verbose_metrics
+
+    def _print_metrics(self):
+        message = []
+        for node in self._nodes:
+            metrics = node.metrics
+            message.append(
+                '{}: {}[{:.2f}+-{:.2f} ms]'.format(
+                    node.name,
+                    metrics.sum('handled'),
+                    metrics.mean('duration') * 1000,
+                    metrics.std('duration') * 1000,
+                )
+            )
+        message = '\t'.join(message)
+        print('\r', message, flush=True, end='', sep='')
 
     def work_func(
             self,
             data=None
     ) -> Batch:
+        if self._verbose_metrics:
+            self._print_metrics()
         if all([node.status == NodeStatus.FINISH for node in self._nodes]):
             for node in self._nodes:
                 node.close()

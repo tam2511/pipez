@@ -42,7 +42,8 @@ def validate_pipeline(
 
 
 def build_pipeline(
-        pipeline: List[Union[Dict, Node]]
+        pipeline: List[Union[Dict, Node]],
+        verbose_metrics: bool = False
 ) -> Node:
     pipeline = validate_pipeline(pipeline=pipeline)
     queues = dict()
@@ -73,7 +74,7 @@ def build_pipeline(
         node.start()
         nodes.append(node)
 
-    watchdog = WatchDog(nodes=nodes)
+    watchdog = WatchDog(nodes=nodes, verbose_metrics=verbose_metrics)
     watchdog.post_init()
     watchdog.start()
     return watchdog
