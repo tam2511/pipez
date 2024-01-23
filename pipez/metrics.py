@@ -1,35 +1,55 @@
 from typing import Union
+from statistics import mean
 from math import sqrt
 
 
 class Metrics(object):
-    _metrics = dict()
+    def __init__(self):
+        self._metrics = {}
 
     def update(
             self,
             key: str,
             value: Union[int, float]
-   ):
-        if key not in self._metrics:
-            self._metrics[key] = []
-        self._metrics[key].append(value)
+    ):
+        self._metrics.setdefault(key, []).append(value)
 
     def mean(
             self,
-            key: str
+            key: str,
+            *,
+            unit_ms: bool = False
     ) -> float:
-        return sum(self._metrics.get(key, [])) / (len(self._metrics.get(key, [])) + 1e-8)
+        if key not in self._metrics:
+            return 0
+
+        result = mean(self._metrics[key])
+
+        if unit_ms:
+            result *= 1000
+
+        return result
 
     def std(
             self,
-            key
-    ):
-        mean = self.mean(key)
-        data = self._metrics.get(key, [])
-        return sqrt(sum([(x - mean) ** 2 for x in data]) / (len(data) + 1e-8))
+            key: str,
+            *,
+            unit_ms: bool = False
+    ) -> float:
+        if key not in self._metrics:
+            return 0
+
+        data = self._metrics[key]
+        average = mean(data)
+        result = sqrt(sum((x - average) ** 2 for x in data) / len(data))
+
+        if unit_ms:
+            result *= 1000
+
+        return result
 
     def sum(
             self,
-            key
-    ):
+            key: str
+    ) -> int:
         return sum(self._metrics.get(key, []))
