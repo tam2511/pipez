@@ -48,6 +48,10 @@ def build_pipeline(
     queues = dict()
     for node in pipeline:
         in_queue, out_queue = node.input, node.output
+        if in_queue is None:
+            in_queue = []
+        if out_queue is None:
+            out_queue = []
         if not isinstance(in_queue, list):
             in_queue = [in_queue]
         if not isinstance(out_queue, list):
