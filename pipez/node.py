@@ -76,17 +76,21 @@ class Node(ABC):
     def output(self) -> Optional[Union[str, List[str]]]:
         return self._output
 
-    def set_in_queue(
-            self,
-            queue: Optional[Union[QueueWrapper, List[QueueWrapper]]] = None
-    ):
-        self._in_queue = queue
+    @property
+    def in_queue(self):
+        return self._in_queue
 
-    def set_out_queue(
-            self,
-            queue: Optional[Union[QueueWrapper, List[QueueWrapper]]] = None
-    ):
-        self._out_queue = queue
+    @in_queue.setter
+    def in_queue(self, value):
+        self._in_queue = value
+
+    @property
+    def out_queue(self):
+        return self._out_queue
+
+    @out_queue.setter
+    def out_queue(self, value):
+        self._out_queue = value
 
     def post_init(self):
         return

@@ -20,6 +20,8 @@ class WatchDog(Node):
             data=None
     ) -> Batch:
         if all([node.status == NodeStatus.FINISH for node in self._nodes]):
+            for node in self._nodes:
+                node.close()
             logging.warning('WatchDog node got all finished nodes. This node will be finished.')
             return Batch(data=list(), status=BatchStatus.END)
         if any([node.status == NodeStatus.TERMINATE for node in self._nodes]):

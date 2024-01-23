@@ -30,7 +30,7 @@ def validate_pipeline(
             _pipeline.append(node)
         elif isinstance(node, Dict):
             cls = registry[node.get('cls')]
-            node['type'] = NodeType.from_string(node['type'])
+            node['type'] = NodeType.from_string(node.get('type', 'Thread'))
             del node['cls']
             node = cls(
                 **node
