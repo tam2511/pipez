@@ -30,7 +30,6 @@ class OrtCV(Node):
         self._session = None
         self._input_name = None
         self._batch_size = None
-        self._pad_value = None
         self._size = None
         self._num_channels = None
         self._output_names = None
