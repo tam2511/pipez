@@ -6,6 +6,7 @@ class BatchStatus(Enum):
     OK = auto()
     ERROR = auto()
     END = auto()
+    SKIP = auto()
 
 
 class Batch(object):
@@ -71,6 +72,11 @@ class Batch(object):
             self
     ) -> bool:
         return self._status == BatchStatus.END
+
+    def is_skip(
+            self
+    ) -> bool:
+        return self._status == BatchStatus.SKIP
 
     @property
     def meta(

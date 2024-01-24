@@ -10,9 +10,10 @@ class WatchDog(Node):
             self,
             nodes: List[Node],
             verbose_metrics: bool = True,
+            timeout: float = 1e-1,
             **kwargs
     ) -> None:
-        super().__init__(name='WatchDog', type=NodeType.THREAD, nodes=nodes, timeout=1e-1)
+        super().__init__(name='WatchDog', type=NodeType.THREAD, nodes=nodes, timeout=timeout, **kwargs)
 
         self._nodes = self._kwargs['nodes']
         self._verbose_metrics = verbose_metrics
