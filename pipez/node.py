@@ -212,6 +212,8 @@ class Node(ABC):
         if out.is_ok():
             self.put(out)
             return StepVerdict.CONTINUE
+        if out.is_skip():
+            return StepVerdict.CONTINUE
         # Below out.status == BatchStatus.ERROR
         self._num_retries += 1
         if self._num_retries <= self._max_retries:
