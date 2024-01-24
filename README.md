@@ -14,7 +14,12 @@ If you want install specific version pipez - use
 pip install pipez[<your choice>]
 ```
 
-Now available `cv` and `onnxruntime` versions.
+Now available `cv`, `fastapi` and `onnxruntime` versions. 
+If you want install pypez with all depencies, you can use
+
+```
+pip install pipez[all]
+```
 
 If you want to install a few version - see nex example:
 
