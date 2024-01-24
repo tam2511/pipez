@@ -6,7 +6,7 @@ from os.path import join, dirname
 from pipez import __version__
 
 requires = [
-
+    'shared-memory-dict'
 ]
 
 extra_requires = {
