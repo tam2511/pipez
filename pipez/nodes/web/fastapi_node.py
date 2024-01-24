@@ -31,7 +31,7 @@ class FastAPINode(Node):
             self,
             rout_path: str,
             end_point: Callable,
-            response_model: BaseModel,
+            response_model: Optional[BaseModel],
             methods: List[str]
     ):
         self._router.add_api_route(
