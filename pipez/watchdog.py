@@ -23,12 +23,10 @@ class WatchDog(Node):
         for node in self._nodes:
             metrics = node.metrics
             message.append(
-                '{}: {}[{:.2f}+-{:.2f} ms]'.format(
-                    node.name,
-                    metrics.sum('handled'),
-                    metrics.mean('duration') * 1000,
-                    metrics.std('duration') * 1000,
-                )
+                f"{node.name}: "
+                f"{metrics.sum('handled')}["
+                f"{metrics.mean('duration', unit_ms=True):.2f}+-"
+                f"{metrics.std('duration', unit_ms=True):.2f} ms]"
             )
         message = '\t'.join(message)
         print('\r', message, flush=True, end='', sep='')
