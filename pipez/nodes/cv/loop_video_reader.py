@@ -26,6 +26,7 @@ class LoopVideoReader(Node):
         self._is_open = True
         self._in_progress = False
         self._source = None
+        self._id = None
 
     def inner_post_init(self):
         self._capture = cv2.VideoCapture(self._source)
@@ -40,7 +41,8 @@ class LoopVideoReader(Node):
         if len(shared[self._shared_source_key]) == 0:
             self._in_progress = False
             return False
-        self._source = shared[self._shared_source_key][0]
+        self._source = shared[self._shared_source_key][0]['source']
+        self._id = shared[self._shared_source_key][0]['id']
         shared[self._shared_source_key] = shared[self._shared_source_key][1:]
         self.inner_post_init()
         if self._shared_error_key not in shared:
@@ -78,9 +80,9 @@ class LoopVideoReader(Node):
 
         if not len(batch):
             self.close()
-            return Batch(meta=dict(batch_size=0, last_batch=True))
+            return Batch(meta=dict(batch_size=0, last_batch=True, id=self._id))
 
-        batch.meta.update(dict(batch_size=len(batch), last_batch=False))
+        batch.meta.update(dict(batch_size=len(batch), last_batch=False, id=self._id))
         return batch
 
     def close(self):

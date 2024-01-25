@@ -53,7 +53,7 @@ class TestVideoAPI(FastAPINode):
         self._shared_source_key = shared_source_key
         self._shared_result_key = shared_result_key
 
-    def post_init(self):
+    def inner_post_init(self):
         self._add_route(
             rout_path='/start',
             end_point=self.add_task,
@@ -66,7 +66,7 @@ class TestVideoAPI(FastAPINode):
             response_model=StartResponse,
             methods=['GET']
         )
-        super().post_init()
+        super().inner_post_init()
 
     def add_task(
             self,
@@ -91,7 +91,7 @@ class TestVideoAPI(FastAPINode):
             id=id,
             source=source,
             status=TaskStatus.QUEUED.value
-        ), 201
+        )
 
     def status_task(
             self,
@@ -106,15 +106,15 @@ class TestVideoAPI(FastAPINode):
                 id=id,
                 source='',
                 status=TaskStatus.NOT_FOUNDED.value
-            ), 200
+            )
         return dict(
             id=id,
-            source=shared[self._shared_result_key]['source'],
-            status=shared[self._shared_result_key]['status'],
-        ), 200
+            source=result_dict[id]['source'],
+            status=result_dict[id]['status'],
+        )
 
     def work_func(
             self,
             data: Optional[Batch] = None
     ) -> Batch:
-        return Batch()
+        return super().work_func(data)

@@ -22,10 +22,12 @@ class FastAPINode(Node):
 
         self._app = FastAPI()
         self._router = APIRouter()
+        self._is_run = False
 
-    def post_init(self):
+    def inner_post_init(self):
         self._app.include_router(self._router)
         uvicorn.run(self._app, host=self._host, port=self._port)
+        self._is_run = True
 
     def _add_route(
             self,
@@ -45,4 +47,7 @@ class FastAPINode(Node):
             self,
             data: Optional[Batch] = None
     ) -> Batch:
+        if not self._is_run:
+            self.inner_post_init()
+
         return Batch()
