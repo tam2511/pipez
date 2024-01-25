@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from pipez.nodes.web import FastAPINode
 from pipez.batch import Batch
+from pipez.registry import Registry
 
 
 class TaskStatus(Enum):
@@ -37,6 +38,7 @@ class StartResponse(BaseModel):
     status: str
 
 
+@Registry.add
 class TestVideoAPI(FastAPINode):
     def __init__(
             self,

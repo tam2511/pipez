@@ -45,6 +45,10 @@ class OrtCV(Node):
         self._input_name = net_input.name
 
         self._batch_size = net_input.shape[0]
+
+        if self._batch_size == 'None':
+            self._batch_size = 1
+
         self._size = (net_input.shape[-1], net_input.shape[-2])
         self._num_channels = net_input.shape[1]
         self._output_names = [output.name for output in self._session.get_outputs()]
