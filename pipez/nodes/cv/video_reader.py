@@ -21,12 +21,20 @@ class VideoReader(Node):
         self._bgr2rgb = bgr2rgb
 
         self._capture = None
-        self._is_open = True
+        self._height = None
+        self._width = None
+        self._fps = None
+        self._is_open = None
 
     def post_init(self):
         self._capture = cv2.VideoCapture(self._source)
 
-        if not self._capture.isOpened():
+        if self._capture.isOpened():
+            self._height = int(self._capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            self._width = int(self._capture.get(cv2.CAP_PROP_FRAME_WIDTH))
+            self._fps = self._capture.get(cv2.CAP_PROP_FPS)
+            self._is_open = True
+        else:
             self._is_open = False
 
     def work_func(
@@ -59,7 +67,10 @@ class VideoReader(Node):
         if not len(batch):
             return Batch(status=BatchStatus.END)
 
-        batch.meta['batch_size'] = len(batch)
+        batch.meta.update(dict(batch_size=len(batch),
+                               height=self._height,
+                               width=self._width,
+                               fps=self._fps))
 
         return batch
 
