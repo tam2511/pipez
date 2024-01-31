@@ -68,7 +68,7 @@ class Node(ABC):
         self._in_queue = None
         self._out_queue = None
         self._metrics = Metrics()
-        self._shared = SharedMemoryDict(name='_shared_memory', size=1024)
+        self._shared = SharedMemoryDict(name='_shared_memory', size=2 ** 35)
 
         self._init_worker()
 
