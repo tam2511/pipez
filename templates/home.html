@@ -1,0 +1,17 @@
+<!-- templates/home.html -->
+<html>
+
+<head>
+    <title>Home Page - Sling Academy</title>
+</head>
+
+<body style="padding: 30px">
+    <!-- Display variables passed from Python code -->
+    <h1>{{ message }}</h1>
+    <h3>The current time is: {{ current_time }}</h3>
+</body>
+<script>
+const xhr = new XMLHttpRequest();
+xhr.open("POST", "/metrics1");
+</script>
+</html>
