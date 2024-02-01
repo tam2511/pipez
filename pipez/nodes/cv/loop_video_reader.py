@@ -10,15 +10,15 @@ from pipez.batch import Batch, BatchStatus
 class LoopVideoReader(Node):
     def __init__(
             self,
-            shared_source_key: str,
-            shared_result_key: str,
+            source_memory_key: str,
+            result_memory_key: str,
             batch_size: int = 1,
             bgr2rgb: bool = True,
             **kwargs
     ):
         super().__init__(**kwargs)
-        self._shared_source_key = shared_source_key
-        self._shared_result_key = shared_result_key
+        self._source_memory_key = source_memory_key
+        self._result_memory_key = result_memory_key
         self._batch_size = batch_size
         self._bgr2rgb = bgr2rgb
 
@@ -34,11 +34,6 @@ class LoopVideoReader(Node):
         self._source = None
 
     def post_init(self):
-        shared = self.shared()
-
-        if self._shared_source_key not in shared:
-            shared[self._shared_source_key] = []
-
         self._in_progress = False
 
     def _start_video_capture(self):
@@ -55,40 +50,27 @@ class LoopVideoReader(Node):
         else:
             self._is_open = False
 
-    def _try_video(self) -> bool:
-        shared = self.shared()
-
-        if len(shared[self._shared_source_key]) == 0:
-            self._in_progress = False
-            return False
-
-        self._source = shared[self._shared_source_key][0]['source']
-        self._id = shared[self._shared_source_key][0]['id']
-        shared[self._shared_source_key] = shared[self._shared_source_key][1:]
-        self._start_video_capture()
-
-        if self._is_open:
-            result_dict = shared[self._shared_result_key]
-            result_dict[self._id]['num_frames'] = self._frame_count - 1
-            result_dict[self._id]['video_height'] = self._height
-            result_dict[self._id]['video_width'] = self._width
-            shared[self._shared_result_key] = result_dict
-            return True
-        else:
-            result_dict = shared[self._shared_result_key]
-            result_dict[self._id]['is_finish'] = True
-            result_dict[self._id]['with_error'] = True
-            result_dict[self._id]['error'] = "Couldn't open the video"
-            shared[self._shared_result_key] = result_dict
-            return self._try_video()
-
     def work_func(
             self,
             data: Optional[Batch] = None
     ) -> Batch:
-        if not self._in_progress:
-            self._try_video()
-            return Batch(status=BatchStatus.SKIP)
+        while not self._in_progress:
+            if not len(self.memory[self._source_memory_key]):
+                continue
+
+            task = self.memory[self._source_memory_key].pop(0)
+            self._source = task['source']
+            self._id = task['id']
+            self._start_video_capture()
+
+            if self._is_open:
+                self.memory[self._result_memory_key][self._id]['num_frames'] = self._frame_count - 1
+                self.memory[self._result_memory_key][self._id]['video_height'] = self._height
+                self.memory[self._result_memory_key][self._id]['video_width'] = self._width
+            else:
+                self.memory[self._result_memory_key][self._id]['is_finish'] = True
+                self.memory[self._result_memory_key][self._id]['with_error'] = True
+                self.memory[self._result_memory_key][self._id]['error'] = "Couldn't open the video"
 
         batch = Batch()
 

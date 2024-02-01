@@ -65,8 +65,30 @@ class SharedMemory(metaclass=SingletonMeta):
             )
             shared_dict[key] = value
 
+    def __delitem__(self, key):
+        del self._memory[key]
+
+    def process_sync(self):
+        shared_dict = SharedMemoryDict(
+            name='_shared_memory',
+            size=self._shared_process_size
+        )
+        for key, value in self._memory.items():
+            shared_dict[key] = value
+
     def __contains__(self, item):
         return item in self._memory
 
     def __str__(self):
         return str(self._memory)
+
+    def __del__(self):
+        shared_dict = SharedMemoryDict(
+            name='_shared_memory',
+            size=self._shared_process_size
+        )
+        shared_dict.shm.close()
+        shared_dict.shm.unlink()
+        del shared_dict
+
+        del self._memory
