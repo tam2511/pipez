@@ -64,3 +64,6 @@ class SharedMemory(metaclass=SingletonMeta):
                 size=self._shared_process_size
             )
             shared_dict[key] = value
+
+    def __contains__(self, item):
+        return item in self._memory
