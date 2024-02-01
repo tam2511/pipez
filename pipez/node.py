@@ -66,13 +66,13 @@ class Node(ABC):
         self._in_queue = None
         self._out_queue = None
         self._metrics = Metrics()
-        self._shared = SharedMemory()
+        self._memory = SharedMemory()
 
         self._init_worker()
 
     @property
     def memory(self):
-        return self._shared
+        return self._memory
 
     @property
     def metrics(self) -> Metrics:

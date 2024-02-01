@@ -51,14 +51,6 @@ class SharedMemory(metaclass=SingletonMeta):
             )
             return shared_dict[key]
 
-    def process_sync(self):
-        shared_dict = SharedMemoryDict(
-            name='_shared_memory',
-            size=self._shared_process_size
-        )
-        for key, value in self._memory.items():
-            shared_dict[key] = value
-
     def __setitem__(
             self,
             key: str,
@@ -71,6 +63,17 @@ class SharedMemory(metaclass=SingletonMeta):
                 name='_shared_memory',
                 size=self._shared_process_size
             )
+            shared_dict[key] = value
+
+    def __delitem__(self, key):
+        del self._memory[key]
+
+    def process_sync(self):
+        shared_dict = SharedMemoryDict(
+            name='_shared_memory',
+            size=self._shared_process_size
+        )
+        for key, value in self._memory.items():
             shared_dict[key] = value
 
     def __contains__(self, item):
