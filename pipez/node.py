@@ -70,7 +70,8 @@ class Node(ABC):
 
         self._init_worker()
 
-    def shared(self) -> SharedMemory:
+    @property
+    def memory(self):
         return self._shared
 
     @property

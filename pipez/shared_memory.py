@@ -67,3 +67,6 @@ class SharedMemory(metaclass=SingletonMeta):
 
     def __contains__(self, item):
         return item in self._memory
+
+    def __str__(self):
+        return str(self._memory)
