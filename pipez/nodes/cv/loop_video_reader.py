@@ -3,7 +3,7 @@ import cv2
 
 from pipez.node import Node
 from pipez.registry import Registry
-from pipez.batch import Batch, BatchStatus
+from pipez.batch import Batch
 
 
 @Registry.add
@@ -13,6 +13,7 @@ class LoopVideoReader(Node):
             source_memory_key: str,
             result_memory_key: str,
             batch_size: int = 1,
+            skip_frames: int = 0,
             bgr2rgb: bool = True,
             **kwargs
     ):
@@ -20,6 +21,7 @@ class LoopVideoReader(Node):
         self._source_memory_key = source_memory_key
         self._result_memory_key = result_memory_key
         self._batch_size = batch_size
+        self._skip_frames = skip_frames
         self._bgr2rgb = bgr2rgb
 
         self._capture = None
@@ -73,16 +75,23 @@ class LoopVideoReader(Node):
                 self.memory[self._result_memory_key][self._id]['error'] = "Couldn't open the video"
 
         batch = Batch()
+        skipped = 0
 
         while len(batch) < self._batch_size:
             flag, image = self._capture.read()
-            current_frame = self._capture.get(cv2.CAP_PROP_POS_FRAMES)
+            current_frame = int(self._capture.get(cv2.CAP_PROP_POS_FRAMES))
 
             if current_frame == self._frame_count:
                 self._in_progress = False
 
             if not flag:
                 break
+
+            if skipped != self._skip_frames:
+                skipped += 1
+                continue
+            else:
+                skipped = 0
 
             if self._bgr2rgb:
                 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -98,7 +107,8 @@ class LoopVideoReader(Node):
                                height=self._height,
                                width=self._width,
                                fps=self._fps,
-                               frame_duration=self._frame_duration))
+                               frame_duration=self._frame_duration,
+                               current_frame=current_frame - 1))
 
         if not self._in_progress:
             self._capture.release()

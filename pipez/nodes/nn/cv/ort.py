@@ -19,6 +19,7 @@ class OrtCV(Node):
             main_key: str,
             providers: Optional[List[str]] = None,
             pad_value: int = 0,
+            dynamic_batch_size: int = 32,
             **kwargs
     ):
         super().__init__(**kwargs)
@@ -26,6 +27,7 @@ class OrtCV(Node):
         self._main_key = main_key
         self._providers = providers if providers else [provider for provider in ort.get_available_providers()]
         self._pad_value = pad_value
+        self._dynamic_batch_size = dynamic_batch_size
 
         self._session = None
         self._input_name = None
@@ -45,6 +47,9 @@ class OrtCV(Node):
         self._input_name = net_input.name
 
         self._batch_size = net_input.shape[0]
+
+        if self._batch_size == 'batch_size':
+            self._batch_size = self._dynamic_batch_size
 
         if self._batch_size == 'None':
             self._batch_size = 1
