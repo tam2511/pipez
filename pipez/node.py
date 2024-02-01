@@ -1,16 +1,14 @@
 from abc import abstractmethod, ABC
 from enum import Enum, auto
 from typing import Optional, Union, List
-from multiprocessing import Process, Value, Manager
+from multiprocessing import Process, Value
 from threading import Thread
 from time import sleep, monotonic
 import logging
 
-from shared_memory_dict import SharedMemoryDict
-
 from pipez.batch import Batch, BatchStatus
 from pipez.metrics import Metrics
-
+from pipez.shared_memory import SharedMemory
 
 
 class StepVerdict(Enum):
@@ -68,11 +66,11 @@ class Node(ABC):
         self._in_queue = None
         self._out_queue = None
         self._metrics = Metrics()
-        self._shared = SharedMemoryDict(name='_shared_memory', size=2 ** 35)
+        self._shared = SharedMemory()
 
         self._init_worker()
 
-    def shared(self) -> SharedMemoryDict:
+    def shared(self) -> SharedMemory:
         return self._shared
 
     @property
