@@ -45,5 +45,5 @@ setup(
         "License :: OSI Approved :: GNU General Public License (GPL)",
         "Operating System :: OS Independent",
     ],
-    package_data={'': ['templates/home.html']}
+    include_package_data=True,
 )

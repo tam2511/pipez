@@ -45,7 +45,7 @@ def build_pipeline(
         pipeline: List[Union[Dict, Node]],
         verbose_metrics: bool = False,
         metrics_host: str = '127.0.0.1',
-        metrics_port: int = 8888
+        metrics_port: int = 8887
 ) -> Node:
     pipeline = validate_pipeline(pipeline=pipeline)
     queues = dict()
