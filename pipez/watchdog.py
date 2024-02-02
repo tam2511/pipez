@@ -5,11 +5,13 @@ import logging
 from pipez.node import Node, NodeType, NodeStatus
 from pipez.batch import Batch, BatchStatus
 
-
-from fastapi import FastAPI, APIRouter, Request
-import uvicorn
-from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse
+try:
+    from fastapi import FastAPI, APIRouter, Request
+    import uvicorn
+    from fastapi.templating import Jinja2Templates
+    from fastapi.responses import HTMLResponse
+except ImportError:
+    logging.warning('For verbose_metrics you must install FastAPI')
 
 
 class WatchDog(Node):
