@@ -19,8 +19,8 @@ class WatchDog(Node):
             self,
             nodes: List[Node],
             verbose_metrics: bool = False,
-            metrics_host: str ='127.0.0.1',
-            metrics_port: int =8888,
+            metrics_host: str = '127.0.0.1',
+            metrics_port: int = 8887,
             timeout: float = 1e-1,
             **kwargs
     ):

@@ -43,7 +43,9 @@ def validate_pipeline(
 
 def build_pipeline(
         pipeline: List[Union[Dict, Node]],
-        verbose_metrics: bool = False
+        verbose_metrics: bool = False,
+        metrics_host: str = '127.0.0.1',
+        metrics_port: int = 8888
 ) -> Node:
     pipeline = validate_pipeline(pipeline=pipeline)
     queues = dict()
@@ -74,7 +76,10 @@ def build_pipeline(
         node.start()
         nodes.append(node)
 
-    watchdog = WatchDog(nodes=nodes, verbose_metrics=verbose_metrics)
+    watchdog = WatchDog(nodes=nodes,
+                        verbose_metrics=verbose_metrics,
+                        metrics_host=metrics_host,
+                        metrics_port=metrics_port)
     watchdog.post_init()
     watchdog.start()
     return watchdog
