@@ -66,7 +66,7 @@ def build_pipeline(
                 queues[queue] = mQueue
 
     for queue in queues:
-        queues[queue] = QueueWrapper(name=queue, queue=queues.get(queue)())
+        queues[queue] = QueueWrapper(name=queue, queue=queues.get(queue)(max_size=32))
 
     nodes = []
     for node in pipeline:
