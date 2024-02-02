@@ -2,7 +2,10 @@ import logging
 from typing import Any
 from multiprocessing import current_process
 
-from shared_memory_dict import SharedMemoryDict
+try:
+    from shared_memory_dict import SharedMemoryDict
+except ImportError:
+    SharedMemoryDict = None
 
 
 class SingletonMeta(type):
@@ -45,6 +48,9 @@ class SharedMemory(metaclass=SingletonMeta):
 
             return self._memory[key]
         else:
+            if SharedMemoryDict is None:
+                raise ImportError
+
             shared_dict = SharedMemoryDict(
                 name='_shared_memory',
                 size=self._shared_process_size
@@ -83,12 +89,13 @@ class SharedMemory(metaclass=SingletonMeta):
         return str(self._memory)
 
     def __del__(self):
-        shared_dict = SharedMemoryDict(
-            name='_shared_memory',
-            size=self._shared_process_size
-        )
-        shared_dict.shm.close()
-        shared_dict.shm.unlink()
-        del shared_dict
+        if SharedMemoryDict is not None:
+            shared_dict = SharedMemoryDict(
+                name='_shared_memory',
+                size=self._shared_process_size
+            )
+            shared_dict.shm.close()
+            shared_dict.shm.unlink()
+            del shared_dict
 
         del self._memory
