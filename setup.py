@@ -45,5 +45,5 @@ setup(
         "License :: OSI Approved :: GNU General Public License (GPL)",
         "Operating System :: OS Independent",
     ],
-    include_package_data=True,
+    data_files=[('templates', ['pipez/templates/home.html'])]
 )

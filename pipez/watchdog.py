@@ -13,6 +13,8 @@ try:
 except ImportError:
     logging.warning('For verbose_metrics you must install FastAPI')
 
+import os
+
 
 class WatchDog(Node):
     def __init__(
@@ -36,7 +38,7 @@ class WatchDog(Node):
     def post_init(self):
         if self._verbose_metrics:
             self._request = Request
-            self._templates = Jinja2Templates(directory="templates")
+            self._templates = Jinja2Templates(directory=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates'))
 
             router = APIRouter()
             router.add_api_route("/metrics", self._print_metrics, methods=["GET"], response_class=HTMLResponse)
@@ -58,6 +60,7 @@ class WatchDog(Node):
                 f"{metrics.sum('handled')}["
                 f"{metrics.mean('duration', unit_ms=True):.2f}+-"
                 f"{metrics.std('duration', unit_ms=True):.2f} ms]"
+                f"_______________________________________________"
             )
         now = datetime.now()
         current_time = now.strftime("%Y-%m-%d %H:%M:%S")
@@ -66,7 +69,7 @@ class WatchDog(Node):
             "home.html",
             {
                 "request": request,
-                "message": '123',
+                "message": message,
                 "current_time": current_time
             }
         )
