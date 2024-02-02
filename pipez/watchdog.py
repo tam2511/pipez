@@ -89,7 +89,7 @@ class WatchDog(Node):
             )
         now = datetime.now()
         current_time = now.strftime("%Y-%m-%d %H:%M:%S")
-        return {'result': True, 'data': dict(abc=current_time)}
+        return {'result': True, 'current_time': dict(abc=current_time),'metrics': message}
 
     def work_func(
             self,

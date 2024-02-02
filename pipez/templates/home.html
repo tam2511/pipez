@@ -7,11 +7,33 @@
 
 <body style="padding: 30px">
     <!-- Display variables passed from Python code -->
-    <h1>{{ message }}</h1>
-    <h3>The current time is: {{ current_time }}</h3>
+    <h3>The current time is <text id="curr_time"></text></h3>
+    <h1 id="metrics_str"><h3>
 </body>
 <script>
-const xhr = new XMLHttpRequest();
-xhr.open("POST", "/metrics1");
+function catch_date(){
+    fetch('/metrics1')
+            .then(function (response) {
+                return response.text();
+            }).then(function (text) {
+            temp = JSON.parse(text)
+            document.getElementById('metrics_str').textContent = temp.metrics;
+            document.getElementById('curr_time').textContent = temp.current_time.abc;
+        });
+}
+catch_date()
+var i = 1;
+
+function myLoop() {
+  setTimeout(function() {
+    catch_date();//  your code here
+    i++;                    //  increment the counter
+    if (true) {           //  if the counter < 10, call the loop function
+      myLoop();
+    }
+  }, 1000)
+}
+
+myLoop();
 </script>
 </html>
