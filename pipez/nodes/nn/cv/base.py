@@ -4,12 +4,10 @@ import onnxruntime
 import numpy as np
 
 from pipez.node import Node
-from pipez.registry import Registry
 from pipez.batch import Batch
 from pipez.utils.resize import resize
 
 
-@Registry.add
 class ORT(Node, ABC):
     def __init__(
             self,

@@ -6,11 +6,9 @@ import logging
 import numpy as np
 
 from pipez.nodes.nn.cv.base import ORT
-from pipez.registry import Registry
 from pipez.batch import Batch, BatchStatus
 
 
-@Registry.add
 class AsyncORT(ORT, ABC):
     def __init__(
             self,
@@ -29,7 +27,7 @@ class AsyncORT(ORT, ABC):
             event = Event()  # one batch run for one model
             event.set()
 
-            def callback(net_result: np.ndarray, context: Dict) -> None:
+            def callback(net_result: np.ndarray, context: Dict, err) -> None:
                 batch_results = [
                     tuple(net_result[out_idx][batch_idx] for out_idx in range(len(net_result)))
                     for batch_idx in range(len(net_result[0]))
