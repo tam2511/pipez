@@ -15,6 +15,7 @@ class ORT(Node, ABC):
             providers: Optional[List[str]] = None,
             pad_value: int = 0,
             dynamic_batch_size: int = 32,
+            half_precision: bool = False,
             **kwargs
     ):
         super().__init__(**kwargs)
@@ -22,6 +23,7 @@ class ORT(Node, ABC):
         self._providers = providers if providers else [provider for provider in onnxruntime.get_available_providers()]
         self._pad_value = pad_value
         self._dynamic_batch_size = dynamic_batch_size
+        self._dtype = np.float16 if half_precision else np.float32
 
         self._session = None
         self._input_name = None
@@ -38,7 +40,7 @@ class ORT(Node, ABC):
         net_input = self._session.get_inputs()[0]
         self._input_name = net_input.name
         self._batch_size = net_input.shape[0]
-
+        print(self._session.get_inputs()[0])
         if self._batch_size == 'batch_size':
             self._batch_size = self._dynamic_batch_size
 
@@ -49,7 +51,7 @@ class ORT(Node, ABC):
         self._num_channels = net_input.shape[1]
         self._output_names = [output.name for output in self._session.get_outputs()]
 
-        self._inputs = np.ones((self._batch_size, self._num_channels, self._size[1], self._size[0]), dtype=np.float32)
+        self._inputs = np.ones((self._batch_size, self._num_channels, self._size[1], self._size[0]), dtype=self._dtype)
         self._inputs.fill(self._pad_value)
 
     def clean_node(self):
