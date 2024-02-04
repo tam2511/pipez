@@ -1,6 +1,7 @@
 from typing import List
 from datetime import datetime
 import logging
+import os
 
 from pipez.node import Node, NodeType, NodeStatus
 from pipez.batch import Batch, BatchStatus
@@ -12,8 +13,6 @@ try:
     from fastapi.responses import HTMLResponse
 except ImportError:
     logging.warning('For verbose_metrics you must install FastAPI')
-
-import os
 
 
 class WatchDog(Node):

@@ -1,8 +1,6 @@
 from itertools import chain
-
 from setuptools import setup, find_packages
 from os.path import join, dirname
-
 from pipez import __version__
 
 requires = [
@@ -36,7 +34,7 @@ setup(
     version=__version__,
     author="Alexander Timofeev",
     author_email="tam2511@mail.ru",
-    python_requires=">=3.7",
+    python_requires=">=3.6",
     packages=find_packages(),
     long_description=open(join(dirname(__file__), 'README.md')).read(),
     long_description_content_type="text/markdown",

@@ -301,14 +301,10 @@ class Node(ABC):
         return NodeStatus(self._status.value)
 
     @property
-    def name(
-            self
-    ) -> str:
+    def name(self) -> str:
         return self._name
 
-    def _terminate(
-            self
-    ):
+    def _terminate(self):
         if self._in_queue is None:
             return
         if isinstance(self._in_queue, list):
@@ -321,15 +317,11 @@ class Node(ABC):
                 self._in_queue.get()
             self._in_queue.put(Batch(status=BatchStatus.END))
 
-    def finish(
-            self
-    ) -> None:
+    def finish(self) -> None:
         self._status.value = NodeStatus.FINISH.value
         self._terminate()
 
-    def terminate(
-            self
-    ):
+    def terminate(self):
         self._status.value = NodeStatus.TERMINATE.value
         self._terminate()
 
