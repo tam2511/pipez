@@ -83,3 +83,21 @@ class Batch(object):
             self
     ) -> Dict:
         return self._meta
+
+    def extend(
+            self,
+            batch: Optional['Batch'] = None
+    ) -> None:
+        if batch is None:
+            return
+        self._data.extend(batch.data)
+        if isinstance(self._meta, dict):
+            self._meta['size'] = len(self)
+        if isinstance(batch.meta, dict):
+            batch.meta['size'] = len(batch)
+        self._meta = [self._meta] if isinstance(self._meta, dict) else self._meta
+        if len(self) == 0:
+            self._meta = []
+        self._meta.extend(
+            [batch.meta] if isinstance(batch.meta, dict) else batch.meta
+        )

@@ -50,7 +50,7 @@ class WatchDog(Node):
 
     def _print_metrics(
             self,
-            request: Request
+            request: 'Request'
     ):
         message = []
         for node in self._nodes:
@@ -76,7 +76,7 @@ class WatchDog(Node):
 
     def _print_metrics1(
             self,
-            request: Request
+            request: 'Request'
     ):
         message = []
         for node in self._nodes:

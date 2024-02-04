@@ -24,3 +24,6 @@ class QueueWrapper:
 
     def empty(self) -> bool:
         return self._queue.empty()
+
+    def size(self) -> int:
+        return self._queue.qsize()

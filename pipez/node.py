@@ -48,6 +48,7 @@ class Node(ABC):
             timeout: float = 0.0,
             input: Optional[Union[str, List[str]]] = None,
             output: Optional[Union[str, List[str]]] = None,
+            collector_flag: Optional[str] = None,
             **kwargs
     ) -> None:
         self._kwargs = kwargs
@@ -59,6 +60,7 @@ class Node(ABC):
         self._timeout = timeout
         self._input = input
         self._output = output
+        self._collector_flag = collector_flag
 
         self._num_retries = 0
         self._num_restart_retries = 0
@@ -67,6 +69,7 @@ class Node(ABC):
         self._out_queue = None
         self._metrics = Metrics()
         self._memory = SharedMemory()
+        self._collection = Batch()
 
         self._init_worker()
 
@@ -244,23 +247,51 @@ class Node(ABC):
             if not self.is_alive():
                 break
             input = self.get()
-            if input is not None:
-                if input.is_end():
-                    self._status.value = NodeStatus.FINISH.value
-                    self.put(batch=input)
-                    break
-                elif input.is_error():
-                    self._status.value = NodeStatus.TERMINATE.value
-                    break
-                elif input.is_skip():
-                    sleep(self._timeout + 1e-2)
+            if self._collector_flag is not None:
+                if input is None:
                     continue
+                if self._collector_flag not in input.meta:
+                    logging.error(
+                        f'Node {self._name} have collector_flag = {self._collector_flag}, but input batch hasn\'t key.'
+                    )
+                    self._status.value = NodeStatus.TERMINATE.value
+                    logging.info(
+                        f'Node {self._name} finish loop.'
+                    )
+                    break
+                if input.meta[self._collector_flag]:
+                    verdict = self._step(input=self._collection)
+                    self._collection = Batch()
+                else:
+                    self._collection.extend(input)
+                    verdict = StepVerdict.CONTINUE
+            else:
+                if input is not None:
+                    if input.is_end():
+                        self._status.value = NodeStatus.FINISH.value
+                        self.put(batch=input)
+                        logging.info(
+                            f'Node {self._name} finish loop.'
+                        )
+                        break
+                    elif input.is_error():
+                        self._status.value = NodeStatus.TERMINATE.value
+                        logging.info(
+                            f'Node {self._name} finish loop.'
+                        )
+                        break
+                    elif input.is_skip():
+                        sleep(self._timeout + 1e-2)
+                        continue
+                verdict = self._step(input=input)
 
-            verdict = self._step(input=input)
             if verdict == StepVerdict.CONTINUE:
                 continue
             else:
                 self._status.value = NodeStatus.FINISH.value if self.is_alive() else self._status.value
+                logging.info(
+                    f'Node {self._name} finish loop.'
+                )
                 break
 
     @property
@@ -275,29 +306,32 @@ class Node(ABC):
     ) -> str:
         return self._name
 
-    def finish(
+    def _terminate(
             self
-    ) -> None:
-        self._status.value = NodeStatus.FINISH.value
+    ):
         if self._in_queue is None:
             return
         if isinstance(self._in_queue, list):
             for queue in self._in_queue:
+                while queue.size():
+                    queue.get()
                 queue.put(Batch(status=BatchStatus.END))
         else:
+            while self._in_queue.size():
+                self._in_queue.get()
             self._in_queue.put(Batch(status=BatchStatus.END))
+
+    def finish(
+            self
+    ) -> None:
+        self._status.value = NodeStatus.FINISH.value
+        self._terminate()
 
     def terminate(
             self
     ):
         self._status.value = NodeStatus.TERMINATE.value
-        if self._in_queue is None:
-            return
-        if isinstance(self._in_queue, list):
-            for queue in self._in_queue:
-                queue.put(Batch(status=BatchStatus.END))
-        else:
-            self._in_queue.put(Batch(status=BatchStatus.END))
+        self._terminate()
 
     def is_process(self) -> bool:
         return self._type == NodeType.PROCESS
