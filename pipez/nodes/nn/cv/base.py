@@ -40,7 +40,7 @@ class ORT(Node, ABC):
         net_input = self._session.get_inputs()[0]
         self._input_name = net_input.name
         self._batch_size = net_input.shape[0]
-        print(self._session.get_inputs()[0])
+
         if self._batch_size == 'batch_size':
             self._batch_size = self._dynamic_batch_size
 
