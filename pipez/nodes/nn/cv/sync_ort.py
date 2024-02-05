@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from typing import Optional, Tuple, Dict, Any
-import logging
 import numpy as np
 
 from pipez.nodes.nn.cv.base import ORT
@@ -30,7 +29,7 @@ class SyncORT(ORT, ABC):
                 for batch_idx in range(idx, min(idx + self._batch_size, len(images))):
                     self._inputs[batch_idx - idx] = images[batch_idx]
 
-                net_result = self._session.run(None, {self._input_name: self._inputs},)
+                net_result = self._session.run(None, {self._input_name: self._inputs})
                 batch_results = [
                     tuple(net_result[out_idx][batch_idx] for out_idx in range(len(net_result)))
                     for batch_idx in range(len(net_result[0]))

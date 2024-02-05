@@ -13,6 +13,7 @@ class ORT(Node, ABC):
             self,
             model_path: str,
             providers: Optional[List[str]] = None,
+            provider_options: Optional[List[Dict[str, Any]]] = None,
             pad_value: int = 0,
             dynamic_batch_size: int = 32,
             half_precision: bool = False,
@@ -21,6 +22,7 @@ class ORT(Node, ABC):
         super().__init__(**kwargs)
         self._model_path = model_path
         self._providers = providers if providers else [provider for provider in onnxruntime.get_available_providers()]
+        self._provider_options = provider_options
         self._pad_value = pad_value
         self._dynamic_batch_size = dynamic_batch_size
         self._dtype = np.float16 if half_precision else np.float32
@@ -35,7 +37,8 @@ class ORT(Node, ABC):
 
     def post_init(self):
         self._session = onnxruntime.InferenceSession(path_or_bytes=self._model_path,
-                                                     providers=self._providers)
+                                                     providers=self._providers,
+                                                     provider_options=self._provider_options)
 
         net_input = self._session.get_inputs()[0]
         self._input_name = net_input.name
