@@ -1,17 +1,175 @@
-<!-- templates/home.html -->
+<!doctype html>
 <html>
-
 <head>
-    <title>Home Page - Sling Academy</title>
+    <title>Home Page</title>
 </head>
+<script type="text/javascript" src="static/DataTables/jQuery-3.7.0/jquery-3.7.0.min.js"></script>
+<link href="static/DataTables/datatables.min.css" rel="stylesheet">
+<script src="static/DataTables/datatables.min.js"></script>
 
+<style type="text/css" media="screen">
+
+
+body {
+  font-size: 140%;
+}
+
+h2 {
+  text-align: center;
+  padding: 20px 0;
+}
+
+table caption {
+	padding: .5em 0;
+}
+
+table.dataTable th,
+table.dataTable td {
+  white-space: nowrap;
+}
+
+.p {
+  text-align: center;
+  padding-top: 140px;
+  font-size: 14px;
+}
+</style>
 <body style="padding: 30px">
-    <!-- Display variables passed from Python code -->
-    <h1>{{ message }}</h1>
-    <h3>The current time is: {{ current_time }}</h3>
+<h2>Pipez Nodes' list</h2>
+<div class="container" style="max-width: 1000px;margin:auto">
+  <div class="row">
+    <div class="col-xs-12">
+      <table class="table table-bordered table-hover dt-responsive">
+        <caption class="text-center"><text id="curr_time"></text></caption>
+        <thead>
+          <tr>
+            <th>№</th>
+            <th>NAME</th>
+            <th>HANDLED</th>
+            <th>DURATION</th>
+            <th>STD ms</th>
+            <th>RATIO</th>
+          </tr>
+        </thead>
+        <tbody>
+
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="5" class="text-center"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+<h1 id="metrics_str"></h1>
 </body>
 <script>
-const xhr = new XMLHttpRequest();
-xhr.open("POST", "/metrics1");
+  $('table').DataTable(
+          {
+    paging: false,
+    scrollCollapse: true,
+    scrollY: '600px',
+            columns: [
+        {
+            data: '№'
+        },
+        {
+            data: 'NAME',
+        },
+        {
+            data: 'HANDLED',
+        },
+        {
+            data: 'DURATION',
+        },
+        {
+            data: 'STD ms'
+        },
+        {
+            data: 'RATIO',
+          render: function (data, type, row, meta) {
+                return type === 'display'
+                    ? '<progress value="' + data + '" max="0"></progress>'
+                    : data;
+            }
+        }
+    ]
+        }
+          );
+
+  function ratio_val(text){
+    max_prog=0
+    for (i=0;i<text.metrics.length;i++)
+      max_prog=parseFloat(max_prog)+parseFloat(text.metrics[i].metrics_mean)*parseFloat(text.metrics[i].metrics_sum);
+    return max_prog
+  }
+
+function catch_date_init(){
+    fetch('/metrics_api')
+            .then(response => response.json()).then(function (text)
+    {
+            var table_ =$('table').DataTable();
+            var max_prog=ratio_val(text);
+            for (i=0;i<text.metrics.length;i++)
+            {
+                  table_.row.add({
+                    '№': i + 1,
+                    'NAME': text.metrics[i].name,
+                    'HANDLED': text.metrics[i].metrics_sum,
+                    'DURATION': text.metrics[i].metrics_mean,
+                    'STD ms': text.metrics[i].metrics_std,
+                    'RATIO': text.metrics[i].metrics_mean*text.metrics[i].metrics_sum,
+                  }).draw();
+            }
+            for(k=0; k<$('progress').length;k++){
+              document.getElementsByTagName('progress')[k].setAttribute('max', max_prog);
+              document.getElementsByTagName('progress')[k].setAttribute('title', parseFloat(parseFloat(document.getElementsByTagName('progress')[k].getAttribute('value'))/parseFloat(max_prog)*100).toFixed(2) + '%' )
+
+            }
+            document.getElementById('curr_time').textContent = text.current_time;
+        });
+}
+function catch_date(){
+    fetch('/metrics_api')
+            .then(response => response.json()).then(function (text)
+    {
+            var table_ =$('table').DataTable();
+            var max_prog=ratio_val(text);
+            for (i=0;i<text.metrics.length;i++)
+            {
+                  var temp={
+                          '№': i + 1,
+                          'NAME': text.metrics[i].name,
+                          'HANDLED': text.metrics[i].metrics_sum,
+                          'DURATION': text.metrics[i].metrics_mean,
+                          'STD ms': text.metrics[i].metrics_std,
+                          'RATIO': text.metrics[i].metrics_mean*text.metrics[i].metrics_sum,
+                  }
+                  table_.row(i).data(temp).draw();
+                  for(k=0; k<$('progress').length;k++){
+                      document.getElementsByTagName('progress')[k].setAttribute('max', max_prog)
+                  }
+                  document.getElementById('curr_time').textContent = text.current_time;
+            }
+        })
+    }
+catch_date_init()
+var i = 1;
+
+function myLoop() {
+  setTimeout(function() {
+    catch_date();//  your code here
+    //i++;                 //  increment the counter
+    if (true) {           //  if the counter < 10, call the loop function
+      myLoop();
+    }
+  }, 1000)
+}
+
+myLoop();
+
 </script>
 </html>
