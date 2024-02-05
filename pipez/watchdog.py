@@ -7,6 +7,7 @@ from pipez.batch import Batch, BatchStatus
 
 try:
     from fastapi import FastAPI, APIRouter, Request
+    from fastapi.staticfiles import StaticFiles
     import uvicorn
     from fastapi.templating import Jinja2Templates
     from fastapi.responses import HTMLResponse
@@ -42,9 +43,10 @@ class WatchDog(Node):
 
             router = APIRouter()
             router.add_api_route("/metrics", self._print_metrics, methods=["GET"], response_class=HTMLResponse)
-            router.add_api_route("/metrics1", self._print_metrics1, methods=["GET"])
+            router.add_api_route("/metrics_api", self._print_metrics_api, methods=["GET"])
 
             app = FastAPI()
+            app.mount('/static', StaticFiles(directory='static', html=True), name='static')
             app.include_router(router)
             uvicorn.run(app, host=self._metrics_host, port=self._metrics_port)
 
@@ -52,29 +54,14 @@ class WatchDog(Node):
             self,
             request: Request
     ):
-        message = []
-        for node in self._nodes:
-            metrics = node.metrics
-            message.append(
-                f"{node.name}: "
-                f"{metrics.sum('handled')}["
-                f"{metrics.mean('duration', unit_ms=True):.2f}+-"
-                f"{metrics.std('duration', unit_ms=True):.2f} ms]"
-                f"_______________________________________________"
-            )
-        now = datetime.now()
-        current_time = now.strftime("%Y-%m-%d %H:%M:%S")
-
         return self._templates.TemplateResponse(
             "home.html",
             {
                 "request": request,
-                "message": message,
-                "current_time": current_time
             }
         )
 
-    def _print_metrics1(
+    def _print_metrics_api(
             self,
             request: Request
     ):
@@ -82,14 +69,16 @@ class WatchDog(Node):
         for node in self._nodes:
             metrics = node.metrics
             message.append(
-                f"{node.name}: "
-                f"{metrics.sum('handled')}["
-                f"{metrics.mean('duration', unit_ms=True):.2f}+-"
-                f"{metrics.std('duration', unit_ms=True):.2f} ms]"
+                {
+                    'name': f"{node.name}",
+                    'metrics_sum': f"{metrics.sum('handled')}",
+                    'metrics_mean': f"{metrics.mean('duration', unit_ms=True):.2f}",
+                    'metrics_std': f"{metrics.std('duration', unit_ms=True):.2f}",
+                }
             )
         now = datetime.now()
         current_time = now.strftime("%Y-%m-%d %H:%M:%S")
-        return {'result': True, 'current_time': dict(abc=current_time),'metrics': message}
+        return {'result': True, 'current_time': current_time,'metrics': message}
 
     def work_func(
             self,
