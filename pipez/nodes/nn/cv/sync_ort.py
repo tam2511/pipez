@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Optional, Tuple, Dict, Any
+import logging
 import numpy as np
 
 from pipez.nodes.nn.cv.base import ORT
