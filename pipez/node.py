@@ -70,6 +70,9 @@ class Node(ABC):
         self._metrics = Metrics()
         self._memory = SharedMemory()
         self._collection = Batch()
+        self._logger = logging.basicConfig(filename='log.log',
+                                           level=logging.DEBUG,
+                                           format="%(asctime)s %(levelname)s %(message)s")
 
         self._init_worker()
 
@@ -147,12 +150,15 @@ class Node(ABC):
     def get(
             self
     ) -> Optional[Batch]:
+        logging.debug(f'{self.name} START get') if self.name != 'WatchDog' else ...
         if self._in_queue is None:
+            logging.debug(f'{self.name} END get [return None]') if self.name != 'WatchDog' else ...
             return None
         elif isinstance(self._in_queue, list):
             results = [queue.get() for queue in self._in_queue]
 
             if len(set([len(batch) for batch in results])) > 1:
+                logging.debug(f'{self.name} END get [return BatchStatus.ERROR]') if self.name != 'WatchDog' else ...
                 return Batch(status=BatchStatus.ERROR)
 
             if all(batch.is_end() for batch in results):
@@ -178,21 +184,27 @@ class Node(ABC):
                 status=status,
                 meta=meta
             )
+            logging.debug(f'{self.name} END get [processed queue-LIST, return batch]') if self.name != 'WatchDog' else ...
             return batch
         else:
+            logging.debug(f'{self.name} END get [processed queue-NOT-LIST, return batch]') if self.name != 'WatchDog' else ...
             return self._in_queue.get()
 
     def put(
             self,
             batch: Optional[Batch]
     ) -> None:
+        logging.debug(f'{self.name} START put') if self.name != 'WatchDog' else ...
         if self._out_queue is None:
+            logging.debug(f'{self.name} END put [return None]') if self.name != 'WatchDog' else ...
             return
         elif isinstance(self._out_queue, list):
             for queue in self._out_queue:
                 queue.put(batch)
+            logging.debug(f'{self.name} END put [processed queue-LIST]') if self.name != 'WatchDog' else ...
         else:
             self._out_queue.put(batch)
+            logging.debug(f'{self.name} END put [processed queue-NOT-LIST]') if self.name != 'WatchDog' else ...
 
     def _step(
             self,
@@ -200,7 +212,9 @@ class Node(ABC):
     ) -> StepVerdict:
         try:
             st = monotonic()
+            logging.debug(f'{self.name} START work_func [input is {input.__class__}]') if self.name != 'WatchDog' else ...
             out: Batch = self.work_func() if input is None else self.work_func(input)
+            logging.debug(f'{self.name} END work_func [out is {out.__class__}]') if self.name != 'WatchDog' else ...
             self._metrics.update('duration', monotonic() - st)
             self._metrics.update('handled', len(out) if input is None else len(input))
         except Exception as e:
