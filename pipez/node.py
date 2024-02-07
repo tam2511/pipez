@@ -70,9 +70,6 @@ class Node(ABC):
         self._metrics = Metrics()
         self._memory = SharedMemory()
         self._collection = Batch()
-        self._logger = logging.basicConfig(filename='log.log',
-                                           level=logging.DEBUG,
-                                           format="%(asctime)s %(levelname)s %(message)s")
 
         self._init_worker()
 

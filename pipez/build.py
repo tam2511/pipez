@@ -1,6 +1,7 @@
 from typing import List, Dict, Optional, Union
 from queue import Queue as tQueue
 from multiprocessing import Queue as mQueue
+import logging
 
 from pipez.node import Node, NodeType
 from pipez.queue_wrapper import QueueWrapper
@@ -45,8 +46,10 @@ def build_pipeline(
         pipeline: List[Union[Dict, Node]],
         verbose_metrics: bool = False,
         metrics_host: str = '127.0.0.1',
-        metrics_port: int = 8887
+        metrics_port: int = 8887,
+        path_log: str = 'log.log'
 ) -> Node:
+    logging.basicConfig(filename=path_log, level=logging.DEBUG, format="%(asctime)s %(levelname)s %(message)s")
     pipeline = validate_pipeline(pipeline=pipeline)
     queues = dict()
     for node in pipeline:
