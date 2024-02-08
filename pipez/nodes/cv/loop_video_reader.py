@@ -12,7 +12,7 @@ class LoopVideoReader(Node):
             self,
             source_memory_key: str,
             result_memory_key: str,
-            batch_size: int = 1,
+            batch_size: int = 8,
             skip_frames: int = 0,
             bgr2rgb: bool = True,
             **kwargs
@@ -45,7 +45,7 @@ class LoopVideoReader(Node):
             self._height = int(self._capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
             self._width = int(self._capture.get(cv2.CAP_PROP_FRAME_WIDTH))
             self._fps = self._capture.get(cv2.CAP_PROP_FPS)
-            self._frame_count = self._capture.get(cv2.CAP_PROP_FRAME_COUNT)
+            self._frame_count = int(self._capture.get(cv2.CAP_PROP_FRAME_COUNT)) - 1
             self._frame_duration = 1000 / self._capture.get(cv2.CAP_PROP_FPS)
             self._in_progress = True
             self._is_open = True
@@ -66,23 +66,34 @@ class LoopVideoReader(Node):
             self._start_video_capture()
 
             if self._is_open:
-                self.memory[self._result_memory_key][self._id]['num_frames'] = self._frame_count - 1
+                self.memory[self._result_memory_key][self._id]['num_frames'] = self._frame_count
                 self.memory[self._result_memory_key][self._id]['video_height'] = self._height
                 self.memory[self._result_memory_key][self._id]['video_width'] = self._width
             else:
-                self.memory[self._result_memory_key][self._id]['is_finish'] = True
                 self.memory[self._result_memory_key][self._id]['with_error'] = True
                 self.memory[self._result_memory_key][self._id]['error'] = "Couldn't open the video"
+                self.memory[self._result_memory_key][self._id]['is_finish'] = True
 
         batch = Batch()
         skipped = 0
 
         while len(batch) < self._batch_size:
             flag, image = self._capture.read()
-            current_frame = int(self._capture.get(cv2.CAP_PROP_POS_FRAMES))
+            current_frame = int(self._capture.get(cv2.CAP_PROP_POS_FRAMES)) - 1
 
-            if current_frame == self._frame_count:
+            if not flag and current_frame < self._frame_count:
                 self._in_progress = False
+                self._capture.release()
+                return Batch(meta=dict(source=self._source,
+                                       id=self._id,
+                                       batch_size=0,
+                                       last_batch=True,
+                                       with_error=True,
+                                       current_frame=current_frame,
+                                       height=self._height,
+                                       width=self._width,
+                                       fps=self._fps,
+                                       frame_duration=self._frame_duration))
 
             if not flag:
                 break
@@ -97,20 +108,22 @@ class LoopVideoReader(Node):
                 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
             batch.append(dict(image=image,
-                              index=round(current_frame) - 1,
+                              index=current_frame,
                               msec=round(self._capture.get(cv2.CAP_PROP_POS_MSEC))))
+
+        if not len(batch):
+            self._in_progress = False
+            self._capture.release()
 
         batch.meta.update(dict(source=self._source,
                                id=self._id,
                                batch_size=len(batch),
-                               last_batch=False if self._in_progress else True,
+                               last_batch=False if len(batch) else True,
+                               with_error=False,
+                               current_frame=current_frame,
                                height=self._height,
                                width=self._width,
                                fps=self._fps,
-                               frame_duration=self._frame_duration,
-                               current_frame=current_frame - 1))
-
-        if not self._in_progress:
-            self._capture.release()
+                               frame_duration=self._frame_duration))
 
         return batch
