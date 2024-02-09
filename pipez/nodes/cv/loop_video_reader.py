@@ -70,8 +70,8 @@ class LoopVideoReader(Node):
                 self.memory[self._result_memory_key][self._id]['video_height'] = self._height
                 self.memory[self._result_memory_key][self._id]['video_width'] = self._width
             else:
-                self.memory[self._result_memory_key][self._id]['with_error'] = True
                 self.memory[self._result_memory_key][self._id]['error'] = "Couldn't open the video"
+                self.memory[self._result_memory_key][self._id]['with_error'] = True
                 self.memory[self._result_memory_key][self._id]['is_finish'] = True
 
         batch = Batch()
