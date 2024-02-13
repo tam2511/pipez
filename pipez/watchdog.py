@@ -45,7 +45,7 @@ class WatchDog(Node):
             router.add_api_route("/metrics_api", self._print_metrics_api, methods=["GET"])
 
             app = FastAPI()
-            app.mount('/static', StaticFiles(directory='static', html=True), name='static')
+            app.mount('/static', StaticFiles(directory=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static'), html=True), name='static')
             app.include_router(router)
             uvicorn.run(app, host=self._metrics_host, port=self._metrics_port)
 
