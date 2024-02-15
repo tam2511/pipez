@@ -80,6 +80,7 @@ class LoopVideoReader(Node):
         while len(batch) < self._batch_size:
             flag, image = self._capture.read()
             current_frame = int(self._capture.get(cv2.CAP_PROP_POS_FRAMES)) - 1
+            current_msec = round(current_frame * self._frame_duration)
 
             if not flag and current_frame < self._frame_count:
                 self._in_progress = False
@@ -109,7 +110,7 @@ class LoopVideoReader(Node):
 
             batch.append(dict(image=image,
                               index=current_frame,
-                              msec=round(self._capture.get(cv2.CAP_PROP_POS_MSEC))))
+                              msec=current_msec))
 
         if not len(batch):
             self._in_progress = False
