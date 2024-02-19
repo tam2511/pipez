@@ -94,7 +94,8 @@ class LoopVideoReader(Node):
                                        height=self._height,
                                        width=self._width,
                                        fps=self._fps,
-                                       frame_duration=self._frame_duration))
+                                       frame_duration=self._frame_duration,
+                                       frame_count=self._frame_count))
 
             if not flag:
                 break
@@ -125,6 +126,7 @@ class LoopVideoReader(Node):
                                height=self._height,
                                width=self._width,
                                fps=self._fps,
-                               frame_duration=self._frame_duration))
+                               frame_duration=self._frame_duration,
+                               frame_count=self._frame_count))
 
         return batch
