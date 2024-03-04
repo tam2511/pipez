@@ -69,6 +69,23 @@ class LoopVideoReader(Node):
                 self.memory[self._result_memory_key][self._id]['num_frames'] = self._frame_count
                 self.memory[self._result_memory_key][self._id]['video_height'] = self._height
                 self.memory[self._result_memory_key][self._id]['video_width'] = self._width
+
+                # TODO: fix
+                seconds = []
+                indexes = []
+
+                for index in list(range(self._frame_count + 1)) + [2 ** 22]:
+                    if round(index * self._frame_duration) < 1000 * (len(seconds) + 1):
+                        indexes.append(index)
+                    else:
+                        seconds.append(indexes)
+                        indexes = [index]
+
+                indexes_per_second = {
+                    second: [indexes[0], indexes[-1]] if len(indexes) > 1 else indexes
+                    for second, indexes in enumerate(seconds)
+                }
+                self.memory[self._id]['indexes_per_second'].update(indexes_per_second)
             else:
                 self.memory[self._result_memory_key][self._id]['error'] = "Couldn't open the video"
                 self.memory[self._result_memory_key][self._id]['with_error'] = True
@@ -80,7 +97,6 @@ class LoopVideoReader(Node):
         while len(batch) < self._batch_size:
             flag, image = self._capture.read()
             current_frame = int(self._capture.get(cv2.CAP_PROP_POS_FRAMES)) - 1
-            current_msec = round(current_frame * self._frame_duration)
 
             if not flag and current_frame < self._frame_count:
                 self._in_progress = False
@@ -94,7 +110,6 @@ class LoopVideoReader(Node):
                                        height=self._height,
                                        width=self._width,
                                        fps=self._fps,
-                                       frame_duration=self._frame_duration,
                                        frame_count=self._frame_count))
 
             if not flag:
@@ -109,9 +124,7 @@ class LoopVideoReader(Node):
             if self._bgr2rgb:
                 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-            batch.append(dict(image=image,
-                              index=current_frame,
-                              msec=current_msec))
+            batch.append(dict(image=image, index=current_frame))
 
         if not len(batch):
             self._in_progress = False
@@ -126,7 +139,6 @@ class LoopVideoReader(Node):
                                height=self._height,
                                width=self._width,
                                fps=self._fps,
-                               frame_duration=self._frame_duration,
                                frame_count=self._frame_count))
 
         return batch
