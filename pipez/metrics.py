@@ -1,5 +1,4 @@
 from typing import Union
-from statistics import mean
 from math import sqrt
 
 
@@ -23,7 +22,7 @@ class Metrics(object):
         if key not in self._metrics:
             return 0
 
-        result = mean(self._metrics[key])
+        result = sum(self._metrics[key]) / len(self._metrics[key]) if self._metrics[key] else 0
 
         if unit_ms:
             result *= 1000
@@ -40,7 +39,7 @@ class Metrics(object):
             return 0
 
         data = self._metrics[key]
-        average = mean(data)
+        average = sum(data) / len(data) if data else 0
         result = sqrt(sum((x - average) ** 2 for x in data) / len(data))
 
         if unit_ms:
