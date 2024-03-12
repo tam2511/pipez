@@ -16,7 +16,7 @@ def resize(
     ratio = min(size[0] / h, size[1] / w)
     h_new, w_new = round(h * ratio), round(w * ratio)
 
-    image_resized = cv2.resize(image, (w_new, h_new), interpolation=cv2.INTER_AREA)
+    image_resized = cv2.resize(image, (0, 0), fx=ratio, fy=ratio, interpolation=cv2.INTER_AREA)
     image_padded = np.full((size[0], size[1], c), fill_value=pad_value, dtype=image.dtype)
 
     h_pos, w_pos = (size[0] - h_new) // 2, (size[1] - w_new) // 2
