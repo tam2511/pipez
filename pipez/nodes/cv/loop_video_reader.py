@@ -24,19 +24,15 @@ class LoopVideoReader(Node):
         self._skip_frames = skip_frames
         self._bgr2rgb = bgr2rgb
 
+        self._source = None
+        self._id = None
         self._capture = None
         self._height = None
         self._width = None
         self._fps = None
         self._frame_count = None
         self._frame_duration = None
-        self._id = None
         self._in_progress = None
-        self._is_open = None
-        self._source = None
-
-    def post_init(self):
-        self._in_progress = False
 
     def _start_video_capture(self):
         self._capture = cv2.VideoCapture(self._source)
@@ -48,9 +44,33 @@ class LoopVideoReader(Node):
             self._frame_count = int(self._capture.get(cv2.CAP_PROP_FRAME_COUNT)) - 1
             self._frame_duration = 1000 / self._capture.get(cv2.CAP_PROP_FPS)
             self._in_progress = True
-            self._is_open = True
+
+            self.memory[self._result_memory_key][self._id]['num_frames'] = self._frame_count
+            self.memory[self._result_memory_key][self._id]['video_height'] = self._height
+            self.memory[self._result_memory_key][self._id]['video_width'] = self._width
+            self._set_indexes_per_second()
         else:
-            self._is_open = False
+            self.memory[self._result_memory_key][self._id]['error'] = "Couldn't open the video"
+            self.memory[self._result_memory_key][self._id]['with_error'] = True
+            self.memory[self._result_memory_key][self._id]['is_finish'] = True
+
+    def _set_indexes_per_second(self):
+        # TODO: fix
+        seconds = []
+        indexes = []
+
+        for index in list(range(self._frame_count + 1)) + [2 ** 22]:
+            if round(index * self._frame_duration) < 1000 * (len(seconds) + 1):
+                indexes.append(index)
+            else:
+                seconds.append(indexes)
+                indexes = [index]
+
+        indexes_per_second = {
+            second: [indexes[0], indexes[-1]] if len(indexes) > 1 else indexes
+            for second, indexes in enumerate(seconds)
+        }
+        self.memory[self._id]['indexes_per_second'].update(indexes_per_second)
 
     def work_func(
             self,
@@ -64,32 +84,6 @@ class LoopVideoReader(Node):
             self._source = task['source']
             self._id = task['id']
             self._start_video_capture()
-
-            if self._is_open:
-                self.memory[self._result_memory_key][self._id]['num_frames'] = self._frame_count
-                self.memory[self._result_memory_key][self._id]['video_height'] = self._height
-                self.memory[self._result_memory_key][self._id]['video_width'] = self._width
-
-                # TODO: fix
-                seconds = []
-                indexes = []
-
-                for index in list(range(self._frame_count + 1)) + [2 ** 22]:
-                    if round(index * self._frame_duration) < 1000 * (len(seconds) + 1):
-                        indexes.append(index)
-                    else:
-                        seconds.append(indexes)
-                        indexes = [index]
-
-                indexes_per_second = {
-                    second: [indexes[0], indexes[-1]] if len(indexes) > 1 else indexes
-                    for second, indexes in enumerate(seconds)
-                }
-                self.memory[self._id]['indexes_per_second'].update(indexes_per_second)
-            else:
-                self.memory[self._result_memory_key][self._id]['error'] = "Couldn't open the video"
-                self.memory[self._result_memory_key][self._id]['with_error'] = True
-                self.memory[self._result_memory_key][self._id]['is_finish'] = True
 
         batch = Batch()
         skipped = 0
