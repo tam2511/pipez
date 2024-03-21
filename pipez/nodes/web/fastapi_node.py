@@ -33,7 +33,7 @@ class FastAPINode(Node, ABC):
 
     def _mount_localhost_ui(self):
         self._app.mount(path='/static',
-                        app=StaticFiles(directory=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')),
+                        app=StaticFiles(directory=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'SwaggerUI')),
                         name='static')
 
         @self._app.get('/docs', include_in_schema=False)
@@ -42,7 +42,6 @@ class FastAPINode(Node, ABC):
                                        title=self._app.title + ' - Swagger UI',
                                        swagger_js_url='/static/swagger-ui-bundle.js',
                                        swagger_css_url='/static/swagger-ui.css',
-                                       swagger_favicon_url='/static/favicon.png',
                                        oauth2_redirect_url=self._app.swagger_ui_oauth2_redirect_url)
 
         @self._app.get(self._app.swagger_ui_oauth2_redirect_url, include_in_schema=False)
