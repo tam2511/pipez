@@ -39,7 +39,7 @@ setup(
     version=__version__,
     author="Alexander Timofeev",
     author_email="tam2511@mail.ru",
-    python_requires=">=3.6",
+    python_requires=">=3.8",
     packages=find_packages(),
     long_description=open(join(dirname(__file__), 'README.md')).read(),
     long_description_content_type="text/markdown",
