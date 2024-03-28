@@ -3,8 +3,8 @@ from typing import Optional, List, Tuple, Dict, Any
 import onnxruntime
 import numpy as np
 
-from pipez.node import Node
-from pipez.batch import Batch
+from pipez.core.node import Node
+from pipez.core.batch import Batch
 from pipez.utils.resize import resize
 
 

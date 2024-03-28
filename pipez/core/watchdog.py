@@ -3,8 +3,8 @@ from datetime import datetime
 import logging
 import os
 
-from pipez.node import Node, NodeType, NodeStatus
-from pipez.batch import Batch, BatchStatus
+from pipez.core.node import Node, NodeType, NodeStatus
+from pipez.core.batch import Batch, BatchStatus
 
 try:
     from fastapi import FastAPI, APIRouter, Request
@@ -45,7 +45,7 @@ class WatchDog(Node):
             router.add_api_route("/metrics_api", self._print_metrics_api, methods=["GET"])
 
             app = FastAPI()
-            app.mount(path='/static',
+            app.mount(path='../static',
                       app=StaticFiles(directory=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static'), html=True),
                       name='static')
             app.include_router(router)

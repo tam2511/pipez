@@ -6,9 +6,9 @@ from threading import Thread
 from time import sleep, monotonic
 import logging
 
-from pipez.batch import Batch, BatchStatus
-from pipez.metrics import Metrics
-from pipez.shared_memory import SharedMemory
+from pipez.core.batch import Batch, BatchStatus
+from pipez.core.metrics import Metrics
+from pipez.core.shared_memory import SharedMemory
 
 
 class StepVerdict(Enum):

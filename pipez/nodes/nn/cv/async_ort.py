@@ -6,7 +6,7 @@ import logging
 import numpy as np
 
 from pipez.nodes.nn.cv.base import ORT
-from pipez.batch import Batch, BatchStatus
+from pipez.core.batch import Batch, BatchStatus
 
 
 class AsyncORT(ORT, ABC):

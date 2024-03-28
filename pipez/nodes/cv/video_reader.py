@@ -1,9 +1,9 @@
 from typing import Optional, Union
 import cv2
 
-from pipez.node import Node
-from pipez.registry import Registry
-from pipez.batch import Batch, BatchStatus
+from pipez.core.node import Node
+from pipez.core.registry import Registry
+from pipez.core.batch import Batch, BatchStatus
 
 
 @Registry.add

@@ -37,10 +37,12 @@ from `pipez.registry`. You should also import base `Node`
 class from `pipez.node`. For example:
 
 ```python
-from pipez.node import  Node
-from pipez.registry import Registry
+from pipez.core.node import Node
+from pipez.core.registry import Registry
 
 Registry.add
+
+
 class MyNode(Node):
     ...
 ```
@@ -52,12 +54,13 @@ handle `Batch` from `pipez.batch`. However, methods
 ```python
 from typing import Optional
 
-from pipez.batch import Batch, BatchStatus
-from pipez.node import  Node
-from pipez.registry import Registry
-
+from pipez.core.batch import Batch, BatchStatus
+from pipez.core.node import Node
+from pipez.core.registry import Registry
 
 Registry.add
+
+
 class MyNode(Node):
     def __init__(
             self,
@@ -72,7 +75,7 @@ class MyNode(Node):
 
     def close(self):
         self._a = 0
-    
+
     def work_func(
             self,
             data: Optional[Batch] = None
@@ -100,11 +103,11 @@ for you node, else you will get error.
 ```
 
 For using class you must import your node class.
+
 ```python
-from pipez.node import NodeType
+from pipez.core.node import NodeType
 
 from ... import MyNode
-
 
 MyNode(
     a=5,
@@ -119,9 +122,9 @@ For building pipeline, we must use `build_pipeline` from `pipez.build`.
 For example:
 
 ```python
-from pipez.build import build_pipeline
+from pipez.core.build import build_pipeline
 from pipez.nodes import DummyNode
-from pipez.node import NodeType
+from pipez.core.node import NodeType
 from ... import MyNode
 
 watchdog = build_pipeline(

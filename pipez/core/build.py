@@ -3,10 +3,10 @@ from queue import Queue as tQueue
 from multiprocessing import Queue as mQueue
 import logging
 
-from pipez.node import Node, NodeType
-from pipez.queue_wrapper import QueueWrapper
-from pipez.watchdog import WatchDog
-from pipez.registry import Registry
+from pipez.core.node import Node, NodeType
+from pipez.core.queue_wrapper import QueueWrapper
+from pipez.core.watchdog import WatchDog
+from pipez.core.registry import Registry
 
 
 def parse_queue(

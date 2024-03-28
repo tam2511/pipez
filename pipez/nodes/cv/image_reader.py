@@ -4,9 +4,9 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from pipez.node import Node
-from pipez.registry import Registry
-from pipez.batch import Batch, BatchStatus
+from pipez.core.node import Node
+from pipez.core.registry import Registry
+from pipez.core.batch import Batch, BatchStatus
 
 
 __EXTENSIONS__ = ['png', 'jpg', 'jpeg']

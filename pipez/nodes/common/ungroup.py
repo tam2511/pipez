@@ -1,8 +1,8 @@
 from typing import Optional, Dict, List
 
-from pipez.node import Node
-from pipez.registry import Registry
-from pipez.batch import Batch
+from pipez.core.node import Node
+from pipez.core.registry import Registry
+from pipez.core.batch import Batch
 
 
 def is_keys_available(

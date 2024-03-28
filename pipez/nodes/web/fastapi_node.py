@@ -6,8 +6,8 @@ from fastapi.staticfiles import StaticFiles
 import uvicorn
 import os
 
-from pipez.node import Node
-from pipez.batch import Batch
+from pipez.core.node import Node
+from pipez.core.batch import Batch
 
 
 class FastAPINode(Node, ABC):
@@ -20,7 +20,7 @@ class FastAPINode(Node, ABC):
         super().__init__(**kwargs)
         self._host = host
         self._port = port
-        self._app = FastAPI(docs_url=None, redoc_url=None)
+        self._app = FastAPI(docs_url=None)
         self._router = APIRouter()
         self._is_run = False
 
