@@ -45,7 +45,7 @@ class WatchDog(Node):
             router.add_api_route("/metrics_api", self._print_metrics_api, methods=["GET"])
 
             app = FastAPI()
-            app.mount(path='../static',
+            app.mount(path='/static',
                       app=StaticFiles(directory=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static'), html=True),
                       name='static')
             app.include_router(router)
@@ -55,12 +55,7 @@ class WatchDog(Node):
             self,
             request: 'Request'
     ):
-        return self._templates.TemplateResponse(
-            "home.html",
-            {
-                "request": request,
-            }
-        )
+        return self._templates.TemplateResponse('home.html', dict(request=request))
 
     def _print_metrics_api(
             self,
@@ -69,17 +64,13 @@ class WatchDog(Node):
         message = []
         for node in self._nodes:
             metrics = node.metrics
-            message.append(
-                {
-                    'name': f"{node.name}",
-                    'metrics_sum': f"{metrics.sum('handled')}",
-                    'metrics_mean': f"{metrics.mean('duration', unit_ms=True):.2f}",
-                    'metrics_std': f"{metrics.std('duration', unit_ms=True):.2f}",
-                }
-            )
+            message.append(dict(name=f'{node.name}',
+                                metrics_sum=f"{metrics.sum('handled')}",
+                                metrics_mean=f"{metrics.mean('duration', unit_ms=True):.2f}",
+                                metrics_std=f"{metrics.std('duration', unit_ms=True):.2f}"))
         now = datetime.now()
         current_time = now.strftime("%Y-%m-%d %H:%M:%S")
-        return {'result': True, 'current_time': current_time,'metrics': message}
+        return dict(result=True, current_time=current_time, metrics=message)
 
     def work_func(
             self,
