@@ -43,23 +43,20 @@ class Node(ABC):
             self,
             name: str,
             type: NodeType = NodeType.THREAD,
+            input: Optional[Union[str, List[str]]] = None,
+            output: Optional[Union[str, List[str]]] = None,
             max_retries: int = 0,
             max_restart_retries: int = 0,
             timeout: float = 0.0,
-            input: Optional[Union[str, List[str]]] = None,
-            output: Optional[Union[str, List[str]]] = None,
-            collector_flag: Optional[str] = None,
-            **kwargs
-    ) -> None:
-        self._kwargs = kwargs
-
+            collector_flag: Optional[str] = None
+    ):
         self._name = name
         self._type = type
+        self._input = input
+        self._output = output
         self._max_retries = max_retries
         self._max_restart_retries = max_restart_retries
         self._timeout = timeout
-        self._input = input
-        self._output = output
         self._collector_flag = collector_flag
 
         self._num_retries = 0
@@ -71,15 +68,12 @@ class Node(ABC):
         self._memory = SharedMemory()
         self._collection = Batch()
 
-        self._init_worker()
+        self._worker = None
+        self._set_worker()
 
     @property
-    def memory(self):
-        return self._memory
-
-    @property
-    def metrics(self) -> Metrics:
-        return self._metrics
+    def name(self) -> str:
+        return self._name
 
     @property
     def input(self) -> Optional[Union[str, List[str]]]:
@@ -88,6 +82,14 @@ class Node(ABC):
     @property
     def output(self) -> Optional[Union[str, List[str]]]:
         return self._output
+
+    @property
+    def memory(self):
+        return self._memory
+
+    @property
+    def metrics(self) -> Metrics:
+        return self._metrics
 
     @property
     def in_queue(self):
@@ -105,57 +107,29 @@ class Node(ABC):
     def out_queue(self, value):
         self._out_queue = value
 
-    def post_init(self):
-        return
+    def _set_worker(self):
+        if self._type == NodeType.THREAD:
+            self._worker = Thread(target=self._run,
+                                  name=self._name,
+                                  daemon=True)
+        elif self._type == NodeType.PROCESS:
+            self._worker = Process(target=self._run,
+                                   name=self._name)
 
-    def close(self):
-        return
-
-    @abstractmethod
-    def work_func(
-            self,
-            data: Optional[Batch] = None
-    ) -> Batch:
-        raise NotImplementedError
-
-    def _init_worker(
-            self
-    ):
-        if self._type == NodeType.PROCESS:
-            self._worker = Process(
-                target=self.run,
-                name=self._name,
-            )
-        else:
-            self._worker = Thread(
-                target=self.run,
-                name=self._name,
-                daemon=False
-            )
-
-    def start(
-            self
-    ):
+    def start(self):
         self._worker.start()
 
     @property
-    def worker(
-            self
-    ) -> Union[Thread, Process]:
+    def worker(self) -> Union[Thread, Process]:
         return self._worker
 
-    def get(
-            self
-    ) -> Optional[Batch]:
-        logging.debug(f'{self.name} START get') if self.name != 'WatchDog' else ...
+    def _get(self) -> Optional[Batch]:
         if self._in_queue is None:
-            logging.debug(f'{self.name} END get [return None]') if self.name != 'WatchDog' else ...
             return None
         elif isinstance(self._in_queue, list):
             results = [queue.get() for queue in self._in_queue]
 
             if len(set([len(batch) for batch in results])) > 1:
-                logging.debug(f'{self.name} END get [return BatchStatus.ERROR]') if self.name != 'WatchDog' else ...
                 return Batch(status=BatchStatus.ERROR)
 
             if all(batch.is_end() for batch in results):
@@ -181,27 +155,21 @@ class Node(ABC):
                 status=status,
                 meta=meta
             )
-            logging.debug(f'{self.name} END get [processed queue-LIST, return batch]') if self.name != 'WatchDog' else ...
             return batch
         else:
-            logging.debug(f'{self.name} END get [processed queue-NOT-LIST, return batch]') if self.name != 'WatchDog' else ...
             return self._in_queue.get()
 
     def put(
             self,
             batch: Optional[Batch]
     ) -> None:
-        logging.debug(f'{self.name} START put') if self.name != 'WatchDog' else ...
         if self._out_queue is None:
-            logging.debug(f'{self.name} END put [return None]') if self.name != 'WatchDog' else ...
             return
         elif isinstance(self._out_queue, list):
             for queue in self._out_queue:
                 queue.put(batch)
-            logging.debug(f'{self.name} END put [processed queue-LIST]') if self.name != 'WatchDog' else ...
         else:
             self._out_queue.put(batch)
-            logging.debug(f'{self.name} END put [processed queue-NOT-LIST]') if self.name != 'WatchDog' else ...
 
     def _step(
             self,
@@ -209,9 +177,7 @@ class Node(ABC):
     ) -> StepVerdict:
         try:
             st = monotonic()
-            logging.debug(f'{self.name} START work_func [input is {input.__class__}]') if self.name != 'WatchDog' else ...
-            out: Batch = self.work_func() if input is None else self.work_func(input)
-            logging.debug(f'{self.name} END work_func [out is {out.__class__}]') if self.name != 'WatchDog' else ...
+            out = self.work_func() if input is None else self.work_func(input)
             self._metrics.update('duration', monotonic() - st)
             self._metrics.update('handled', len(out) if input is None else len(input))
         except Exception as e:
@@ -230,45 +196,33 @@ class Node(ABC):
         # Below out.status == BatchStatus.ERROR
         self._num_retries += 1
         if self._num_retries <= self._max_retries:
-            logging.warning(
-                f'Node {self._name} got error status, but will try handling. Attempt {self._num_retries} from {self._max_retries}.'
-            )
+            logging.warning(f'Node {self._name} got error status, but will try handling. Attempt {self._num_retries} from {self._max_retries}.')
             return self._step(input)
         self._num_restart_retries += 1
         if self._num_restart_retries <= self._max_restart_retries:
-            logging.warning(
-                f'Node {self._name} got max errors for retry politic, but will be restarted. Attempt {self._num_restart_retries} from {self._max_restart_retries}.'
-            )
+            logging.warning(f'Node {self._name} got max errors for retry politic, but will be restarted. Attempt {self._num_restart_retries} from {self._max_restart_retries}.')
             self._num_retries = 0
             self.close()
             self.post_init()
             return self._step(input)
 
-        logging.warning(
-            f'Node {self._name} got errors more times than the limit. This node will be terminate.'
-        )
+        logging.warning(f'Node {self._name} got errors more times than the limit. This node will be terminate.')
         self._status.value = NodeStatus.TERMINATE.value
         return StepVerdict.STOP
 
-    def run(
-            self
-    ):
+    def _run(self):
         while True:
             sleep(self._timeout)
-            if not self.is_alive():
+            if not self.is_alive:
                 break
-            input = self.get()
+            input = self._get()
             if self._collector_flag is not None:
                 if input is None:
                     continue
                 if self._collector_flag not in input.meta:
-                    logging.error(
-                        f'Node {self._name} have collector_flag = {self._collector_flag}, but input batch hasn\'t key.'
-                    )
+                    logging.error(f'Node {self._name} have collector_flag = {self._collector_flag}, but input batch hasn\'t key.')
                     self._status.value = NodeStatus.TERMINATE.value
-                    logging.info(
-                        f'Node {self._name} finish loop.'
-                    )
+                    logging.info(f'Node {self._name} finish loop.')
                     break
                 if input.meta[self._collector_flag]:
                     verdict = self._step(input=self._collection)
@@ -281,15 +235,11 @@ class Node(ABC):
                     if input.is_end():
                         self._status.value = NodeStatus.FINISH.value
                         self.put(batch=input)
-                        logging.info(
-                            f'Node {self._name} finish loop.'
-                        )
+                        logging.info(f'Node {self._name} finish loop.')
                         break
                     elif input.is_error():
                         self._status.value = NodeStatus.TERMINATE.value
-                        logging.info(
-                            f'Node {self._name} finish loop.'
-                        )
+                        logging.info(f'Node {self._name} finish loop.')
                         break
                     elif input.is_skip():
                         sleep(self._timeout + 1e-2)
@@ -299,21 +249,13 @@ class Node(ABC):
             if verdict == StepVerdict.CONTINUE:
                 continue
             else:
-                self._status.value = NodeStatus.FINISH.value if self.is_alive() else self._status.value
-                logging.info(
-                    f'Node {self._name} finish loop.'
-                )
+                self._status.value = NodeStatus.FINISH.value if self.is_alive else self._status.value
+                logging.info(f'Node {self._name} finish loop.')
                 break
 
     @property
-    def status(
-            self
-    ) -> NodeStatus:
+    def status(self) -> NodeStatus:
         return NodeStatus(self._status.value)
-
-    @property
-    def name(self) -> str:
-        return self._name
 
     def _terminate(self):
         if self._in_queue is None:
@@ -342,5 +284,20 @@ class Node(ABC):
     def is_thread(self) -> bool:
         return self._type == NodeType.THREAD
 
-    def is_alive(self) -> bool:
+    @property
+    def is_alive(self):
         return self.status == NodeStatus.ALIVE
+
+
+    def post_init(self):
+        pass
+
+    def close(self):
+        pass
+
+    @abstractmethod
+    def work_func(
+            self,
+            data: Optional[Batch] = None
+    ) -> Batch:
+        pass

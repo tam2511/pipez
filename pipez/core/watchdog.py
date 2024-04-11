@@ -1,4 +1,4 @@
-from typing import List
+from typing import Optional, List
 from datetime import datetime
 import logging
 import os
@@ -21,13 +21,12 @@ class WatchDog(Node):
             self,
             nodes: List[Node],
             verbose_metrics: bool = False,
-            metrics_host: str = '127.0.0.1',
+            metrics_host: str = '0.0.0.0',
             metrics_port: int = 8887,
-            timeout: float = 1e-1,
             **kwargs
     ):
-        super().__init__(name='WatchDog', type=NodeType.THREAD, nodes=nodes, timeout=timeout, **kwargs)
-        self._nodes = self._kwargs['nodes']
+        super().__init__(name='WatchDog', timeout=1e-1, **kwargs)
+        self._nodes = nodes
         self._verbose_metrics = verbose_metrics
         self._metrics_host = metrics_host
         self._metrics_port = metrics_port
@@ -74,20 +73,23 @@ class WatchDog(Node):
 
     def work_func(
             self,
-            data=None
+            data: Optional[Batch] = None
     ) -> Batch:
-        if all([node.status == NodeStatus.FINISH for node in self._nodes]):
+        if all(node.is_alive for node in self._nodes):
+            return Batch(status=BatchStatus.OK)
+
+        elif all(node.status == NodeStatus.FINISH for node in self._nodes):
             for node in self._nodes:
                 node.close()
             logging.warning('WatchDog node got all finished nodes. This node will be finished.')
-            return Batch(data=list(), status=BatchStatus.END)
-        if any([node.status == NodeStatus.TERMINATE for node in self._nodes]):
+            return Batch(status=BatchStatus.END)
+
+        elif any(node.status == NodeStatus.TERMINATE for node in self._nodes):
             logging.warning('WatchDog node got some terminated nodes. This node will be finished.')
             for node in self._nodes:
                 node.terminate()
                 logging.warning(f'Node {node.name} was terminated by watchdog.')
             return Batch(status=BatchStatus.END)
-        return Batch(status=BatchStatus.OK)
 
     @property
     def nodes(self) -> List[Node]:

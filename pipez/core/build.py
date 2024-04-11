@@ -45,13 +45,9 @@ def validate_pipeline(
 def build_pipeline(
         pipeline: List[Union[Dict, Node]],
         verbose_metrics: bool = False,
-        metrics_host: str = '127.0.0.1',
-        metrics_port: int = 8887,
-        debug: bool = False,
-        path_log: str = 'log.log'
-) -> Node:
-    if debug:
-        logging.basicConfig(filename=path_log, level=logging.DEBUG, format="%(asctime)s %(levelname)s %(message)s")
+        metrics_host: str = '0.0.0.0',
+        metrics_port: int = 8887
+) -> WatchDog:
     pipeline = validate_pipeline(pipeline=pipeline)
     queues = dict()
     for node in pipeline:
