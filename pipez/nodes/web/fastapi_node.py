@@ -6,8 +6,8 @@ from fastapi.staticfiles import StaticFiles
 import uvicorn
 import os
 
-from pipez.core.node import Node
 from pipez.core.batch import Batch
+from pipez.core.node import Node
 
 
 class FastAPINode(Node, ABC):
@@ -52,11 +52,8 @@ class FastAPINode(Node, ABC):
     def add_api_routes(self):
         pass
 
-    def work_func(
-            self,
-            data: Optional[Batch] = None
-    ) -> Batch:
+    def processing(self, input: Optional[Batch]) -> Optional[Batch]:
         if not self._is_run:
             self._run()
 
-        return Batch()
+        return None

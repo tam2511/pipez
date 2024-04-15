@@ -1,14 +1,13 @@
-from typing import Optional, Dict, List
-
+from typing import Optional, List, Dict
+from pipez.core.batch import Batch
 from pipez.core.node import Node
 from pipez.core.registry import Registry
-from pipez.core.batch import Batch
 
 
 def is_keys_available(
         data: Dict,
         keys: List[str]
-):
+) -> bool:
     for key in keys:
         if not isinstance(data, dict):
             return False
@@ -29,15 +28,11 @@ class Ungroup(Node):
             main_key: str,
             **kwargs
     ):
-        super().__init__(**kwargs)
-
+        super().__init__(name=self.__class__.__name__, **kwargs)
         self._keys = keys
         self._main_key = main_key
 
-    def work_func(
-            self,
-            data: Optional[Batch] = None
-    ) -> Batch:
+    def processing(self, data: Optional[Batch]) -> Optional[Batch]:
         batch = Batch(meta=data.meta)
         batch.meta['idxs'] = []
 

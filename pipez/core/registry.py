@@ -1,52 +1,20 @@
-import logging
+class Registry(object):
+    _instance = None
 
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super().__new__(cls)
+            cls._instance._registry = {}
 
-class SingletonMeta(type):
-    _instances = {}
+        return cls._instance
 
-    def __call__(cls, *args, **kwargs):
-        return cls.get_instance()
+    def __getitem__(self, item):
+        if item not in self._registry:
+            raise KeyError(f'Class «{item}» not found in registry, it can be added using @Registry.add')
 
-    def get_instance(cls):
-        if cls not in cls._instances:
-            cls.create_instance()
-        return cls._instances[cls]
-
-    def create_instance(cls, *args, **kwargs):
-        assert cls not in cls._instances
-        i = cls.__new__(cls, *args, **kwargs)
-        i.__init__(*args, **kwargs)
-        cls._instances[cls] = i
-        return i
-
-
-class Registry(metaclass=SingletonMeta):
-    def __init__(
-            self
-    ):
-        self.objs = {}
-
-    def __getitem__(
-            self,
-            item: str
-    ):
-        if item not in self.objs:
-            logging.error(
-                f'Object {item} not found in registry. You can add it with @Registry.add.'
-            )
-            raise KeyError(item)
-
-        return self.objs[item]
-
-    def add_obj(
-            self,
-            cls
-    ):
-        name = cls.__name__
-        self.objs[name] = cls
+        return self._registry[item]
 
     @staticmethod
     def add(cls):
-        registry = Registry.get_instance()
-        registry.add_obj(cls)
+        Registry()._registry[cls.__name__] = cls
         return cls

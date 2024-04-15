@@ -1,1 +1,1 @@
-from pipez.utils.resize import resize
+from .resize import resize

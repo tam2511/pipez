@@ -3,10 +3,10 @@ from queue import Queue as tQueue
 from multiprocessing import Queue as mQueue
 import logging
 
-from pipez.core.node import Node, NodeType
+from pipez.core.legacy_node import Node, NodeType
 from pipez.core.queue_wrapper import QueueWrapper
-from pipez.core.watchdog import WatchDog
-from pipez.core.registry import Registry
+from pipez.core.legacy_watchdog import WatchDog
+from pipez.core.legacy_registry import Registry
 
 
 def parse_queue(
@@ -20,7 +20,6 @@ def parse_queue(
     else:
         return [queues[queue] for queue in queue_info]
 
-
 def validate_pipeline(
         pipeline: List[Union[Dict, Node]]
 ) -> List[Node]:
@@ -33,9 +32,7 @@ def validate_pipeline(
             cls = registry[node.get('cls')]
             node['type'] = NodeType.from_string(node.get('type', 'Thread'))
             del node['cls']
-            node = cls(
-                **node
-            )
+            node = cls(**node)
             _pipeline.append(node)
         else:
             raise BrokenPipeError('Available only Node and Dict type for pipeline describing')

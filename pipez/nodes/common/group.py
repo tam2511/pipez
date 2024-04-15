@@ -1,8 +1,7 @@
 from typing import Optional
-
+from pipez.core.batch import Batch
 from pipez.core.node import Node
 from pipez.core.registry import Registry
-from pipez.core.batch import Batch
 
 
 @Registry.add
@@ -12,20 +11,12 @@ class Group(Node):
             class_name: str,
             **kwargs
     ):
-        super().__init__(**kwargs)
-
+        super().__init__(name=self.__class__.__name__, **kwargs)
         self._class_name = class_name
 
-    def work_func(
-            self,
-            data: Optional[Batch] = None
-    ) -> Batch:
+    def processing(self, data: Optional[Batch]) -> Optional[Batch]:
         idxs = iter(data.meta.pop('idxs'))
-
-        batch = Batch(
-            data=[{} for _ in range(data.meta['batch_size'])],
-            meta=data.meta
-        )
+        batch = Batch(data=[{} for _ in range(data.meta['batch_size'])], meta=data.meta)
 
         for obj in data:
             idx = next(idxs)

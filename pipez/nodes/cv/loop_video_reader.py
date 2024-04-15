@@ -1,9 +1,9 @@
 from typing import Optional
 import cv2
 
-from pipez.core.node import Node
-from pipez.core.registry import Registry
-from pipez.core.batch import Batch
+from pipez.core.legacy_node import Node
+from pipez.core.legacy_registry import Registry
+from pipez.core.legacy_batch import Batch
 
 
 @Registry.add

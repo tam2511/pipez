@@ -1,16 +1,18 @@
-from typing import Union, Any
+from typing import Any
 from queue import Queue as tQueue
-from multiprocessing.queues import Queue as mQueue
+from multiprocessing import Queue as mQueue
+from pipez.core.enums import NodeType
 
 
-class QueueWrapper:
+class QueueWrapper(object):
     def __init__(
             self,
             name: str,
-            queue: Union[mQueue, tQueue]
-    ) -> None:
+            type: NodeType = NodeType.THREAD,
+            maxsize: int = 0
+    ):
         self._name = name
-        self._queue = queue
+        self._queue = tQueue(maxsize=maxsize) if type == NodeType.THREAD else mQueue(maxsize=maxsize)
 
     @property
     def name(self) -> str:
