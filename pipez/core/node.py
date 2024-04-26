@@ -8,7 +8,7 @@ import time
 from pipez.core.batch import Batch
 from pipez.core.enums import NodeType, NodeStatus, BatchStatus
 from pipez.core.memory import Memory
-from pipez.core.metrics import Metrics
+# from pipez.core.metrics import Metrics
 from pipez.core.queue_wrapper import QueueWrapper
 
 
@@ -29,9 +29,8 @@ class Node(ABC):
 
         self._input_queue = []
         self._output_queue = []
-        self._batch = Batch()
         self._memory = Memory()
-        self._metrics = Metrics()
+        # self._metrics = Metrics()
 
         self._status = None
         self._worker = None
@@ -65,9 +64,9 @@ class Node(ABC):
     def memory(self) -> Memory:
         return self._memory
 
-    @property
-    def metrics(self) -> Metrics:
-        return self._metrics
+    # @property
+    # def metrics(self) -> Metrics:
+    #     return self._metrics
 
     @property
     def is_alive(self) -> bool:
@@ -83,13 +82,10 @@ class Node(ABC):
 
     def _set_worker(self):
         if self._type == NodeType.THREAD:
-            self._worker = Thread(target=self._run,
-                                  name=self._name,
-                                  daemon=True)
+            self._worker = Thread(target=self._run, name=self._name)
 
         elif self._type == NodeType.PROCESS:
-            self._worker = Process(target=self._run,
-                                   name=self._name)
+            self._worker = Process(target=self._run, name=self._name)
 
     def start(self):
         self._status = NodeStatus.ALIVE
@@ -131,11 +127,11 @@ class Node(ABC):
 
     def _step(self, input: Optional[Batch]) -> Optional[Batch]:
         try:
-            st = time.monotonic()
+            # st = time.monotonic()  # TODO:
             output = self.processing(input)
-            self._metrics.update('duration', time.monotonic() - st)
-            self._metrics.update('input_processed', len(input) if isinstance(input, Batch) else 0)
-            self._metrics.update('output_processed', len(output) if isinstance(output, Batch) else 0)
+            # self._metrics.update('duration', time.monotonic() - st)  # TODO:
+            # self._metrics.update('input_processed', len(input) if isinstance(input, Batch) else 0)  # TODO:
+            # self._metrics.update('output_processed', len(output) if isinstance(output, Batch) else 0)  # TODO:
         except Exception as e:
             output = Batch(status=BatchStatus.ERROR, error=f'During processing raise exception {e.__class__} {e}')
 

@@ -8,6 +8,9 @@ class Metrics(object):
     def update(self, key, value):
         self._metrics.setdefault(key, []).append(value)
 
+        if key == 'duration' and len(self._metrics[key]) > 1000:
+            self._metrics[key] = self._metrics[key][-1000:]
+
     def mean(self, key, *, unit_ms: bool = False) -> float:
         if key not in self._metrics or not self._metrics[key]:
             return 0
