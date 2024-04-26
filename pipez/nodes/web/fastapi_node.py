@@ -22,14 +22,6 @@ class FastAPINode(Node, ABC):
         self._port = port
         self._app = FastAPI(docs_url=None)
         self._router = APIRouter()
-        self._is_run = False
-
-    def _run(self):
-        self._mount_localhost_ui()
-        self.add_api_routes()
-        self._app.include_router(self._router)
-        uvicorn.run(self._app, host=self._host, port=self._port)
-        self._is_run = True
 
     def _mount_localhost_ui(self):
         self._app.mount(path='/static',
@@ -53,7 +45,9 @@ class FastAPINode(Node, ABC):
         pass
 
     def processing(self, input: Optional[Batch]) -> Optional[Batch]:
-        if not self._is_run:
-            self._run()
+        self._mount_localhost_ui()
+        self.add_api_routes()
+        self._app.include_router(self._router)
+        uvicorn.run(self._app, host=self._host, port=self._port)
 
         return None
