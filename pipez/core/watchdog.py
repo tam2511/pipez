@@ -82,7 +82,7 @@ class Watchdog(Node):
                 if queue in queues:
                     continue
 
-                queues[queue] = QueueWrapper(name=queue, type=node.type, maxsize=32)
+                queues[queue] = QueueWrapper(name=queue, type=node.type, maxsize=16)
 
         for node in self._pipeline:
             for queue in node.input:
