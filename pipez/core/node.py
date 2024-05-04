@@ -1,14 +1,14 @@
 from abc import ABC, abstractmethod
-from typing import Optional, List, Union
+from typing import Optional, List, Dict, Union
 from threading import Thread
 from multiprocessing import Process
+from collections import deque
 import logging
 import time
 
 from pipez.core.batch import Batch
 from pipez.core.enums import NodeType, NodeStatus, BatchStatus
 from pipez.core.memory import Memory
-# from pipez.core.metrics import Metrics
 from pipez.core.queue_wrapper import QueueWrapper
 
 
@@ -23,18 +23,22 @@ class Node(ABC):
     ):
         self._name = name
         self._type = type
+
+        if self._type == NodeType.THREAD:
+            self._worker = Thread(target=self._run, name=self._name)
+
+        elif self._type == NodeType.PROCESS:
+            self._worker = Process(target=self._run, name=self._name)
+
         self._input = [input] if isinstance(input, str) else input if input else []
         self._output = [output] if isinstance(output, str) else output if output else []
-        self._timeout = timeout
-
         self._input_queue = []
         self._output_queue = []
-        self._memory = Memory()
-        # self._metrics = Metrics()
 
+        self._memory = Memory()
+        self._metrics = dict(duration=deque(maxlen=1000), input=0, output=0)
+        self._timeout = timeout
         self._status = None
-        self._worker = None
-        self._set_worker()
 
     @property
     def name(self) -> str:
@@ -64,9 +68,9 @@ class Node(ABC):
     def memory(self) -> Memory:
         return self._memory
 
-    # @property
-    # def metrics(self) -> Metrics:
-    #     return self._metrics
+    @property
+    def metrics(self) -> Dict:
+        return self._metrics
 
     @property
     def is_alive(self) -> bool:
@@ -79,13 +83,6 @@ class Node(ABC):
     @property
     def is_terminate(self) -> bool:
         return self._status == NodeStatus.TERMINATE
-
-    def _set_worker(self):
-        if self._type == NodeType.THREAD:
-            self._worker = Thread(target=self._run, name=self._name)
-
-        elif self._type == NodeType.PROCESS:
-            self._worker = Process(target=self._run, name=self._name)
 
     def start(self):
         self._status = NodeStatus.ALIVE
@@ -127,11 +124,11 @@ class Node(ABC):
 
     def _step(self, input: Optional[Batch]) -> Optional[Batch]:
         try:
-            # st = time.monotonic()  # TODO:
+            monotonic = time.monotonic()
             output = self.processing(input)
-            # self._metrics.update('duration', time.monotonic() - st)  # TODO:
-            # self._metrics.update('input_processed', len(input) if isinstance(input, Batch) else 0)  # TODO:
-            # self._metrics.update('output_processed', len(output) if isinstance(output, Batch) else 0)  # TODO:
+            self._metrics['duration'].append(time.monotonic() - monotonic)
+            self._metrics['input'] += len(input) if isinstance(input, Batch) else 0
+            self._metrics['output'] += len(output) if isinstance(output, Batch) else 0
         except Exception as e:
             output = Batch(status=BatchStatus.ERROR, error=f'During processing raise exception {e.__class__} {e}')
 
@@ -163,7 +160,6 @@ class Node(ABC):
                     self._status = NodeStatus.TERMINATE
                     break
 
-            # input is None or input.is_ok
             output = self._step(input)
 
             if isinstance(output, Batch):
@@ -178,7 +174,7 @@ class Node(ABC):
                     self._status = NodeStatus.TERMINATE
                     break
 
-    def exit(self):
+    def release(self):
         pass
 
     def drain(self):
