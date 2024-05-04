@@ -36,7 +36,7 @@ class Node(ABC):
         self._output_queue = []
 
         self._memory = Memory()
-        self._metrics = dict(duration=deque(maxlen=1000), input=0, output=0)
+        self._metrics = dict(duration=deque([0], maxlen=1000), input=0, output=0)
         self._timeout = timeout
         self._status = None
 

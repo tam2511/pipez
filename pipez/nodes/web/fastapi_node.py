@@ -3,8 +3,8 @@ from typing import Optional
 from fastapi import FastAPI, APIRouter
 from fastapi.openapi.docs import get_swagger_ui_html, get_swagger_ui_oauth2_redirect_html
 from fastapi.staticfiles import StaticFiles
+from os.path import join, dirname, abspath
 import uvicorn
-import os
 
 from pipez.core.batch import Batch
 from pipez.core.node import Node
@@ -25,7 +25,7 @@ class FastAPINode(Node, ABC):
 
     def _mount_localhost_ui(self):
         self._app.mount(path='/static',
-                        app=StaticFiles(directory=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'SwaggerUI')),
+                        app=StaticFiles(directory=join(dirname(abspath(__file__)), 'SwaggerUI')),
                         name='static')
 
         @self._app.get('/docs', include_in_schema=False)

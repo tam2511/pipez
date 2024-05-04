@@ -4,10 +4,11 @@ from fastapi import FastAPI, APIRouter, Request
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
+from statistics import mean, pstdev
 from datetime import datetime
+from os.path import join, dirname, abspath
 import uvicorn
 import logging
-import os
 
 from pipez.core.batch import Batch
 from pipez.core.enums import BatchStatus
@@ -32,40 +33,34 @@ class Watchdog(Node):
         self.start()
 
         if verbose_metrics:
-            self._request = Request
-            self._templates = Jinja2Templates(directory=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates'))
+            self._templates = Jinja2Templates(directory=join(dirname(abspath(__file__)), 'templates'))
 
             app = FastAPI()
             app.mount(path='/static',
-                      app=StaticFiles(directory=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static'), html=True),
+                      app=StaticFiles(directory=join(dirname(abspath(__file__)), 'static'), html=True),
                       name='static')
 
             router = APIRouter()
-            router.add_api_route(path='/metrics', endpoint=self._print_metrics, methods=['GET'], response_class=HTMLResponse)
-            router.add_api_route(path='/metrics_api', endpoint=self._print_metrics_api, methods=['GET'])
+            router.add_api_route(path='/metrics_html', endpoint=self._metrics_html, methods=['GET'], response_class=HTMLResponse)
+            router.add_api_route(path='/metrics_json', endpoint=self._metrics_json, methods=['GET'])
 
             app.include_router(router)
             Thread(target=uvicorn.run, kwargs=dict(app=app, host=metrics_host, port=metrics_port)).start()
 
-    def _print_metrics(self, request: 'Request'):
+    def _metrics_html(self, request: Request):
         return self._templates.TemplateResponse('home.html', dict(request=request))
 
-    def _print_metrics_api(self, request: 'Request'):
+    def _metrics_json(self):
         metrics = []
 
         for node in self._pipeline:
             metrics.append(dict(name=node.name,
-                                metrics_sum='0',
-                                metrics_mean='0',
-                                metrics_std='0'))
+                                input=node.metrics['input'],
+                                output=node.metrics['output'],
+                                duration_mean_ms=f"{mean(node.metrics['duration']) * 1000:.2f}",
+                                duration_std_ms=f"{pstdev(node.metrics['duration']) * 1000:.2f}"))
 
-
-            # message.append(dict(name=f'{node.name}',
-            #                     metrics_sum=f"{metrics.sum('handled')}",
-            #                     metrics_mean=f"{metrics.mean('duration', unit_ms=True):.2f}",
-            #                     metrics_std=f"{metrics.std('duration', unit_ms=True):.2f}"))
-
-        return dict(result=True, current_time=datetime.now().strftime('%Y-%m-%d %H:%M:%S'), metrics=metrics)
+        return dict(current_time=datetime.now().strftime('%Y-%m-%d %H:%M:%S'), metrics=metrics)
 
     def _build_pipeline(self):
         queues = {}
