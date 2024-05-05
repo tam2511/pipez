@@ -100,7 +100,7 @@ table.dataTable td {
 function ratio_val(text){
     max_prog=0
     for (i=0;i<text.metrics.length;i++)
-        max_prog=parseFloat(max_prog)+parseFloat(text.metrics[i].duration_mean_ms)*parseFloat(text.metrics[i].output);
+        max_prog=parseFloat(max_prog)+parseFloat(text.metrics[i].duration_mean_ms);
     return max_prog
 }
 
@@ -119,7 +119,7 @@ function catch_date_init(){
                     'output': text.metrics[i].output,
                     'duration_mean_ms': text.metrics[i].duration_mean_ms,
                     'duration_std_ms': text.metrics[i].duration_std_ms,
-                    'ratio': text.metrics[i].duration_mean_ms*text.metrics[i].output,
+                    'ratio': text.metrics[i].duration_mean_ms,
                   }).draw();
             }
             for(k=0; k<$('progress').length;k++){
@@ -145,7 +145,7 @@ function catch_date(){
                           'output': text.metrics[i].output,
                           'duration_mean_ms': text.metrics[i].duration_mean_ms,
                           'duration_std_ms': text.metrics[i].duration_std_ms,
-                          'ratio': text.metrics[i].duration_mean_ms*text.metrics[i].output,
+                          'ratio': text.metrics[i].duration_mean_ms,
                   }
                   table_.row(i).data(temp).draw();
                   for(k=0; k<$('progress').length;k++){
