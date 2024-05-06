@@ -1,6 +1,6 @@
 from typing import List, Dict
 
-from pipez.core.legacy_node import Node
+from pipez.core.node import Node
 from pipez.core.registry import Registry
 from pipez.core.enums import NodeType
 

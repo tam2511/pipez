@@ -1,1 +1,1 @@
-from pipez.nodes.web.fastapi_node import FastAPINode
+from .fastapi_node import FastAPINode
