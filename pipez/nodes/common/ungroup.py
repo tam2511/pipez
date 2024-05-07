@@ -1,54 +1,26 @@
-from typing import Optional, List, Dict
+from typing import Optional
 from pipez.core.batch import Batch
 from pipez.core.node import Node
 from pipez.core.registry import Registry
-
-
-def is_keys_available(
-        data: Dict,
-        keys: List[str]
-) -> bool:
-    for key in keys:
-        if not isinstance(data, dict):
-            return False
-
-        if key not in data:
-            return False
-
-        data = data[key]
-
-    return True
 
 
 @Registry.add
 class Ungroup(Node):
     def __init__(
             self,
-            keys: List[str],
-            main_key: str,
+            class_name: str,
             **kwargs
     ):
         super().__init__(name=self.__class__.__name__, **kwargs)
-        self._keys = keys
-        self._main_key = main_key
+        self._class_name = class_name
 
     def processing(self, data: Optional[Batch]) -> Optional[Batch]:
         batch = Batch(meta=data.meta)
-        batch.meta['idxs'] = []
+        batch.meta.setdefault('idxs', [])
 
         for idx, obj in enumerate(data):
-            if not is_keys_available(obj, self._keys):
-                continue
-
-            for key in self._keys:
-                obj = obj[key]
-
-            for target_obj in obj:
-                if isinstance(target_obj, dict):
-                    batch.append({self._main_key: target_obj[self._main_key]})
-                else:
-                    batch.append({self._main_key: target_obj})
-
+            for crop in obj.get(self._class_name, []):
+                batch.append(crop['crop'])
                 batch.meta['idxs'].append(idx)
 
         return batch

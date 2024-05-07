@@ -20,6 +20,6 @@ class Group(Node):
 
         for obj in data:
             idx = next(idxs)
-            batch[idx].setdefault(self._class_name, []).append(obj['output'])
+            batch[idx].setdefault(self._class_name, []).append(obj)
 
         return batch
