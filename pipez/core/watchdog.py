@@ -94,3 +94,4 @@ class Watchdog(Node):
                 logging.info(f'{node.name}: Draining')
 
             return Batch(status=BatchStatus.END)
+
