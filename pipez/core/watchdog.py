@@ -34,16 +34,11 @@ class Watchdog(Node):
 
         if verbose_metrics:
             self._templates = Jinja2Templates(directory=join(dirname(abspath(__file__)), 'templates'))
-
             app = FastAPI()
-            app.mount(path='/static',
-                      app=StaticFiles(directory=join(dirname(abspath(__file__)), 'static'), html=True),
-                      name='static')
-
+            app.mount('/static', StaticFiles(directory=join(dirname(abspath(__file__)), 'static'), html=True), 'static')
             router = APIRouter()
-            router.add_api_route(path='/metrics_html', endpoint=self._metrics_html, methods=['GET'], response_class=HTMLResponse)
-            router.add_api_route(path='/metrics_json', endpoint=self._metrics_json, methods=['GET'])
-
+            router.add_api_route('/metrics_html', self._metrics_html, methods=['GET'], response_class=HTMLResponse)
+            router.add_api_route('/metrics_json', self._metrics_json, methods=['GET'])
             app.include_router(router)
             Thread(target=uvicorn.run, kwargs=dict(app=app, host=metrics_host, port=metrics_port)).start()
 

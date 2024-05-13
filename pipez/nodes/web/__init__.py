@@ -1,1 +1,1 @@
-from .fastapi_node import FastAPINode
+from .node_fast_api import NodeFastAPI

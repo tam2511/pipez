@@ -10,7 +10,7 @@ from pipez.core.batch import Batch
 from pipez.core.node import Node
 
 
-class FastAPINode(Node, ABC):
+class NodeFastAPI(Node, ABC):
     def __init__(
             self,
             host: str = '0.0.0.0',
@@ -24,14 +24,12 @@ class FastAPINode(Node, ABC):
         self._router = APIRouter()
 
     def _mount_localhost_ui(self):
-        self._app.mount(path='/static',
-                        app=StaticFiles(directory=join(dirname(abspath(__file__)), 'SwaggerUI')),
-                        name='static')
+        self._app.mount('/static', StaticFiles(directory=join(dirname(abspath(__file__)), 'SwaggerUI')), 'static')
 
         @self._app.get('/docs', include_in_schema=False)
         async def custom_swagger_ui_html():
             return get_swagger_ui_html(openapi_url=self._app.openapi_url,
-                                       title=self._app.title + ' - Swagger UI',
+                                       title=f'{self._app.title} - Swagger UI',
                                        swagger_js_url='/static/swagger-ui-bundle.js',
                                        swagger_css_url='/static/swagger-ui.css',
                                        oauth2_redirect_url=self._app.swagger_ui_oauth2_redirect_url)
