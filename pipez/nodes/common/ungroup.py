@@ -16,7 +16,7 @@ class Ungroup(Node):
 
     def processing(self, data: Optional[Batch]) -> Optional[Batch]:
         batch = Batch(meta=data.meta)
-        batch.meta.setdefault('idxs', [])
+        batch.meta.update(idxs=[], batch_size=len(data))
 
         for idx, obj in enumerate(data):
             for crop in obj.get(self._class_name, []):

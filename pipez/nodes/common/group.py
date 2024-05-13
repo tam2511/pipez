@@ -16,7 +16,8 @@ class Group(Node):
 
     def processing(self, data: Optional[Batch]) -> Optional[Batch]:
         idxs = iter(data.meta.pop('idxs'))
-        batch = Batch(data=[{} for _ in range(data.meta['batch_size'])], meta=data.meta)
+        batch_size = data.meta.pop('batch_size')
+        batch = Batch(data=[{} for _ in range(batch_size)], meta=data.meta)
 
         for obj in data:
             idx = next(idxs)
