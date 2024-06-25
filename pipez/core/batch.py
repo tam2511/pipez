@@ -1,11 +1,11 @@
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
 from pipez.core.enums import BatchStatus
 
 
 class Batch(object):
     def __init__(
             self,
-            data: Optional[List[Dict]] = None,
+            data: Optional[List[Any]] = None,
             meta: Optional[Dict] = None,
             status: BatchStatus = BatchStatus.OK,
             error: Optional[str] = None
@@ -16,7 +16,7 @@ class Batch(object):
         self._error = error
 
     @property
-    def data(self) -> List[Dict]:
+    def data(self) -> List[Any]:
         return self._data
 
     @property
@@ -39,7 +39,7 @@ class Batch(object):
     def error(self) -> str:
         return self._error
 
-    def __getitem__(self, item) -> Dict:
+    def __getitem__(self, item) -> Any:
         return self._data[item]
 
     def __iter__(self):
@@ -48,5 +48,5 @@ class Batch(object):
     def __len__(self):
         return len(self._data)
 
-    def append(self, data: Dict):
+    def append(self, data: Any):
         self._data.append(data)
