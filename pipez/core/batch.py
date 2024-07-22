@@ -3,6 +3,9 @@ from pipez.core.enums import BatchStatus
 
 
 class Batch(object):
+    """
+    Пакет данных для передачи между узлами
+    """
     def __init__(
             self,
             data: Optional[List[Any]] = None,

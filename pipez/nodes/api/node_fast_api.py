@@ -11,6 +11,9 @@ from pipez.core.node import Node
 
 
 class NodeFastAPI(Node, ABC):
+    """
+    Базовый класс узла FastAPI
+    """
     def __init__(
             self,
             host: str = '0.0.0.0',

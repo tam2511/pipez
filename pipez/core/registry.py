@@ -1,4 +1,7 @@
 class Registry(object):
+    """
+    Реестр для перевода узлов из JSON-формата в Python объекты
+    """
     _instance = None
 
     def __new__(cls, *args, **kwargs):

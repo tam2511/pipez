@@ -2,6 +2,9 @@ from enum import Enum, auto
 
 
 class NodeType(Enum):
+    """
+    Тип узла
+    """
     THREAD = auto()
     PROCESS = auto()
 
@@ -16,12 +19,18 @@ class NodeType(Enum):
 
 
 class NodeStatus(Enum):
+    """
+    Статус узла
+    """
     ALIVE = auto()
     FINISH = auto()
     TERMINATE = auto()
 
 
 class BatchStatus(Enum):
+    """
+    Статус пакета данных
+    """
     OK = auto()
     END = auto()
     ERROR = auto()

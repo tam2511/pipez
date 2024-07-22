@@ -9,6 +9,9 @@ from pipez.utils.resize import resize
 
 
 class BaseORT(Node, ABC):
+    """
+    Базовый класс узла инференса посредством ONNX Runtime
+    """
     def __init__(
             self,
             model_path: str,

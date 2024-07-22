@@ -8,6 +8,9 @@ from pipez.core.enums import NodeType
 def json2nodes(
         pipeline: List[Dict]
 ) -> List[Node]:
+    """
+    Перевод узлов из JSON-формата в Python объекты
+    """
     registry = Registry()
     nodes = []
 

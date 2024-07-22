@@ -7,6 +7,9 @@ from pipez.core.batch import Batch
 
 
 class SyncORT(BaseORT, ABC):
+    """
+    Узел инференса посредством ONNX Runtime
+    """
     def __init__(
             self,
             data_key: Optional[str] = None,

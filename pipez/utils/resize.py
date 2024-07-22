@@ -8,6 +8,9 @@ def resize(
         size: Tuple[int, int],
         pad_value: int = 0
 ) -> np.ndarray:
+    """
+    Алгоритм изменения размеров изображений
+    """
     h, w, c = image.shape
 
     if (h, w) == (size[0], size[1]):

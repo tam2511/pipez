@@ -17,6 +17,9 @@ from pipez.core.queue_wrapper import QueueWrapper
 
 
 class Watchdog(Node):
+    """
+    Наблюдатель за пайплайном
+    """
     def __init__(
             self,
             pipeline: List[Node],

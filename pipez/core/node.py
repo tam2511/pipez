@@ -13,6 +13,9 @@ from pipez.core.queue_wrapper import QueueWrapper
 
 
 class Node(ABC):
+    """
+    Узел для формирования пайплайна
+    """
     def __init__(
             self,
             name: str,

@@ -6,6 +6,9 @@ from pipez.core.registry import Registry
 
 @Registry.add
 class Group(Node):
+    """
+    Узел группировки данных пакета
+    """
     def __init__(
             self,
             class_name: str,

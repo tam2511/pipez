@@ -5,6 +5,9 @@ from pipez.core.enums import NodeType
 
 
 class QueueWrapper(object):
+    """
+    Очередь-обёртка для передачи пакетов данных между узлами
+    """
     def __init__(
             self,
             name: str,

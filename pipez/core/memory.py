@@ -1,4 +1,7 @@
 class Memory(object):
+    """
+    Общая память между узлами
+    """
     _instance = None
 
     def __new__(cls, *args, **kwargs):
