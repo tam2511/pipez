@@ -9,9 +9,11 @@ from datetime import datetime
 from os.path import join, dirname, abspath
 import uvicorn
 import logging
+import time
 
 from pipez.core.batch import Batch
 from pipez.core.enums import BatchStatus
+from pipez.core.monitoring import Monitoring
 from pipez.core.node import Node
 from pipez.core.queue_wrapper import QueueWrapper
 
@@ -29,11 +31,12 @@ class Watchdog(Node):
             metrics_port: int = 8887,
             **kwargs
     ):
-        super().__init__(name=self.__class__.__name__, timeout=0.1, **kwargs)
+        super().__init__(name=self.__class__.__name__, timeout=1.0, **kwargs)
         logging.getLogger().setLevel(logging.INFO)
         self._pipeline = pipeline
         self._build_pipeline()
         self.start()
+        Monitoring().start()
 
         if verbose_metrics:
             self._templates = Jinja2Templates(directory=join(dirname(abspath(__file__)), 'templates'))
@@ -80,10 +83,9 @@ class Watchdog(Node):
             node.start()
 
     def processing(self, data: Optional[Batch]) -> Optional[Batch]:
-        if all(node.is_finish for node in self._pipeline):
-            for node in self._pipeline:
-                node.release()
+        self.shared_memory['time'] = time.time()
 
+        if all(node.is_finish for node in self._pipeline):
             logging.info(f'{self.name}: All nodes finished successfully')
 
             return Batch(status=BatchStatus.END)
@@ -92,7 +94,6 @@ class Watchdog(Node):
             logging.info(f'{self.name}: At least one of the nodes has terminated')
 
             for node in self._pipeline:
-                node.release()
                 node.drain()
                 logging.info(f'{node.name}: Draining')
 

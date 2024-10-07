@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Optional, List, Dict, Union
 from threading import Thread
 from multiprocessing import Process
+from multiprocessing.managers import DictProxy
 from collections import deque
 import logging
 import time
@@ -10,6 +11,7 @@ from pipez.core.batch import Batch
 from pipez.core.enums import NodeType, NodeStatus, BatchStatus
 from pipez.core.memory import Memory
 from pipez.core.queue_wrapper import QueueWrapper
+from pipez.core.shared_memory import SharedMemory
 
 
 class Node(ABC):
@@ -39,6 +41,7 @@ class Node(ABC):
         self._output_queue = []
 
         self._memory = Memory()
+        self._shared_memory = SharedMemory().shared_memory
         self._metrics = dict(duration=deque([0], maxlen=100), input=0, output=0)
         self._timeout = timeout
         self._status = None
@@ -70,6 +73,10 @@ class Node(ABC):
     @property
     def memory(self) -> Memory:
         return self._memory
+
+    @property
+    def shared_memory(self) -> DictProxy:
+        return self._shared_memory
 
     @property
     def metrics(self) -> Dict:
@@ -176,6 +183,8 @@ class Node(ABC):
                     logging.error(f'{self.name}: {output.error}')
                     self._status = NodeStatus.TERMINATE
                     break
+
+        self.release()
 
     def release(self):
         pass
