@@ -152,6 +152,8 @@ class Node(ABC):
             queue.put(output)
 
     def _run(self):
+        self.post_init()
+
         while True:
             time.sleep(self._timeout)
 
@@ -185,6 +187,9 @@ class Node(ABC):
                     break
 
         self.release()
+
+    def post_init(self):
+        pass
 
     def release(self):
         pass
