@@ -17,7 +17,7 @@ class NodeFastAPI(Node, ABC):
     def __init__(
             self,
             host: str = '0.0.0.0',
-            port: int = 8888,
+            port: int = 80,
             **kwargs
     ):
         super().__init__(**kwargs)

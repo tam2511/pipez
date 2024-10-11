@@ -28,7 +28,7 @@ class Watchdog(Node):
             *,
             verbose_metrics: bool = False,
             metrics_host: str = '0.0.0.0',
-            metrics_port: int = 8887,
+            metrics_port: int = 8080,
             **kwargs
     ):
         super().__init__(name=self.__class__.__name__, timeout=1.0, **kwargs)
