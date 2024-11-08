@@ -1,3 +1,1 @@
-recursive-include pipez/core/static *
-recursive-include pipez/core/templates *
-recursive-include pipez/nodes/api/SwaggerUI *
+recursive-include pipez/resources *

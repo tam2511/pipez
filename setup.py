@@ -1,14 +1,13 @@
 from setuptools import setup, find_packages
 from os.path import join, dirname
-from pipez import __version__
 
 
 setup(
     name='pipez',
-    version=__version__,
+    version='0.0.125',
     author="Alexander Timofeev",
     author_email="tam2511@mail.ru",
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     packages=find_packages(),
     long_description=open(join(dirname(__file__), 'README.md')).read(),
     long_description_content_type="text/markdown",
