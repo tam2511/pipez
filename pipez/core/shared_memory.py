@@ -2,7 +2,7 @@ from multiprocessing import Manager
 from multiprocessing.managers import DictProxy
 
 
-class SharedMemory(object):
+class SharedMemory:
     _instance = None
 
     def __new__(cls, *args, **kwargs):
