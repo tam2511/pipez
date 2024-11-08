@@ -1,33 +1,36 @@
-class Memory(object):
-    """
-    Общая память между узлами
-    """
+import threading
+from typing import Any
+
+
+class Memory:
     _instance = None
+    _lock = threading.Lock()
 
     def __new__(cls, *args, **kwargs):
-        if not cls._instance:
-            cls._instance = super().__new__(cls)
-            cls._instance._memory = {}
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = super().__new__(cls)
+                cls._instance._data = {}
 
         return cls._instance
 
-    def __getitem__(self, item):
-        if item not in self._memory:
-            raise KeyError(f'Key «{item}» not found in memory')
+    def __len__(self) -> int:
+        return len(self._data)
 
-        return self._memory[item]
+    def __iter__(self):
+        return iter(self._data)
 
-    def __setitem__(self, key, value):
-        self._memory[key] = value
+    def __getitem__(self, key: Any) -> Any:
+        return self._data[key]
 
-    def __delitem__(self, key):
-        del self._memory[key]
+    def __setitem__(self, key: Any, value: Any) -> None:
+        self._data[key] = value
 
-    def __contains__(self, item):
-        return item in self._memory
+    def __delitem__(self, key: Any) -> None:
+        del self._data[key]
 
-    def __str__(self):
-        return str(self._memory)
+    def __contains__(self, key: Any) -> bool:
+        return key in self._data
 
-    def __del__(self):
-        del self._memory
+    def __str__(self) -> str:
+        return str(self._data)

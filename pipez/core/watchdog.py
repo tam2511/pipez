@@ -1,27 +1,37 @@
+import os
+import time
+import signal
+import logging
+from datetime import datetime
+from statistics import mean, pstdev
+from pathlib import Path
+import importlib.resources
+
 from typing import Optional, List
 from threading import Thread
 from fastapi import FastAPI, APIRouter, Request
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
-from statistics import mean, pstdev
-from datetime import datetime
-from os.path import join, dirname, abspath
 import uvicorn
-import logging
-import time
 
-from pipez.core.batch import Batch
-from pipez.core.enums import BatchStatus
-from pipez.core.monitoring import Monitoring
-from pipez.core.node import Node
-from pipez.core.queue_wrapper import QueueWrapper
+from .batch import Batch
+from .enums import NodeType, BatchStatus
+from .node import Node
+from .queue_wrapper import QueueWrapper
+import pipez.resources
 
+
+class Monitoring(Node):
+    def __init__(self, **kwargs):
+        super().__init__(node_type=NodeType.PROCESS, timeout=10.0, **kwargs)
+
+    def processing(self, data: Optional[Batch]) -> Optional[Batch]:
+        if time.time() - self.shared_memory.get('time', float('inf')) >= 60.0:
+            logging.info(f'{self.name}: os.kill(1, signal.SIGTERM)')
+            os.kill(1, signal.SIGTERM)
 
 class Watchdog(Node):
-    """
-    Наблюдатель за пайплайном
-    """
     def __init__(
             self,
             pipeline: List[Node],
@@ -31,7 +41,7 @@ class Watchdog(Node):
             metrics_port: int = 8080,
             **kwargs
     ):
-        super().__init__(name=self.__class__.__name__, timeout=1.0, **kwargs)
+        super().__init__(timeout=1.0, **kwargs)
         logging.getLogger().setLevel(logging.INFO)
         self._pipeline = pipeline
         self._build_pipeline()
@@ -39,9 +49,11 @@ class Watchdog(Node):
         Monitoring().start()
 
         if verbose_metrics:
-            self._templates = Jinja2Templates(directory=join(dirname(abspath(__file__)), 'templates'))
+            directory = Path(importlib.resources.files(pipez.resources)) / 'templates'
+            self._templates = Jinja2Templates(directory=directory)
             app = FastAPI()
-            app.mount('/static', StaticFiles(directory=join(dirname(abspath(__file__)), 'static'), html=True), 'static')
+            directory = Path(importlib.resources.files(pipez.resources)) / 'static'
+            app.mount('/static', StaticFiles(directory=directory, html=True), 'static')
             router = APIRouter()
             router.add_api_route('/metrics_html', self._metrics_html, methods=['GET'], response_class=HTMLResponse)
             router.add_api_route('/metrics_json', self._metrics_json, methods=['GET'])
@@ -71,30 +83,30 @@ class Watchdog(Node):
                 if queue in queues:
                     continue
 
-                queues[queue] = QueueWrapper(name=queue, type=node.type, maxsize=16)
+                queues[queue] = QueueWrapper(name=queue, type=node.node_type, maxsize=16)
 
         for node in self._pipeline:
             for queue in node.input:
-                node.input_queue.append(queues[queue])
+                node.input_queues.append(queues[queue])
 
             for queue in node.output:
-                node.output_queue.append(queues[queue])
+                node.output_queues.append(queues[queue])
 
             node.start()
 
     def processing(self, data: Optional[Batch]) -> Optional[Batch]:
         self.shared_memory['time'] = time.time()
 
-        if all(node.is_finish for node in self._pipeline):
+        if all(node.is_completed for node in self._pipeline):
             logging.info(f'{self.name}: All nodes finished successfully')
 
-            return Batch(status=BatchStatus.END)
+            return Batch(status=BatchStatus.LAST)
 
-        elif any(node.is_terminate for node in self._pipeline):
+        elif any(node.is_terminated for node in self._pipeline):
             logging.info(f'{self.name}: At least one of the nodes has terminated')
 
             for node in self._pipeline:
                 node.drain()
                 logging.info(f'{node.name}: Draining')
 
-            return Batch(status=BatchStatus.END)
+            return Batch(status=BatchStatus.LAST)

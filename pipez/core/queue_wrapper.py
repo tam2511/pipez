@@ -1,13 +1,10 @@
+import queue
+import multiprocessing
 from typing import Any
-from queue import Queue as tQueue
-from multiprocessing import Queue as mQueue
-from pipez.core.enums import NodeType
+from .enums import NodeType
 
 
-class QueueWrapper(object):
-    """
-    Очередь-обёртка для передачи пакетов данных между узлами
-    """
+class QueueWrapper:
     def __init__(
             self,
             name: str,
@@ -15,7 +12,7 @@ class QueueWrapper(object):
             maxsize: int = 0
     ):
         self._name = name
-        self._queue = tQueue(maxsize=maxsize) if type == NodeType.THREAD else mQueue(maxsize=maxsize)
+        self._queue = queue.Queue(maxsize=maxsize) if type == NodeType.THREAD else multiprocessing.Queue(maxsize=maxsize)
 
     @property
     def name(self) -> str:
