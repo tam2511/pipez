@@ -1,19 +1,19 @@
 from abc import ABC, abstractmethod
+from pathlib import Path
+import importlib.resources
 from typing import Optional
+
 from fastapi import FastAPI, APIRouter
 from fastapi.openapi.docs import get_swagger_ui_html, get_swagger_ui_oauth2_redirect_html
 from fastapi.staticfiles import StaticFiles
-from os.path import join, dirname, abspath
 import uvicorn
 
-from pipez.core.batch import Batch
-from pipez.core.node import Node
+from ..core.batch import Batch
+from ..core.node import Node
+import pipez.resources
 
 
 class NodeFastAPI(Node, ABC):
-    """
-    Базовый класс узла FastAPI
-    """
     def __init__(
             self,
             host: str = '0.0.0.0',
@@ -27,7 +27,8 @@ class NodeFastAPI(Node, ABC):
         self._router = APIRouter()
 
     def _mount_localhost_ui(self):
-        self._app.mount('/static', StaticFiles(directory=join(dirname(abspath(__file__)), 'SwaggerUI')), 'static')
+        directory = Path(importlib.resources.files(pipez.resources)) / 'SwaggerUI'
+        self._app.mount('/static', StaticFiles(directory=directory), 'static')
 
         @self._app.get('/docs', include_in_schema=False)
         async def custom_swagger_ui_html():
