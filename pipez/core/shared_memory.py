@@ -1,17 +1,16 @@
+import threading
 from multiprocessing import Manager
 from multiprocessing.managers import DictProxy
 
 
 class SharedMemory:
-    _instance = None
+    _shared_memory = None
+    _lock = threading.Lock()
 
-    def __new__(cls, *args, **kwargs):
-        if not cls._instance:
-            cls._instance = super().__new__(cls)
-            cls._instance._shared_memory = Manager().dict()
+    @classmethod
+    def get_shared_memory(cls) -> DictProxy:
+        with cls._lock:
+            if cls._shared_memory is None:
+                cls._shared_memory = Manager().dict()
 
-        return cls._instance
-
-    @property
-    def shared_memory(self) -> DictProxy:
-        return self._shared_memory
+        return cls._shared_memory

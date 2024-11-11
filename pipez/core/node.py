@@ -1,11 +1,11 @@
-import time
 import logging
+import time
 from abc import ABC, abstractmethod
 from collections import deque
-from threading import Thread
 from multiprocessing import Process
 from multiprocessing.managers import DictProxy
-from typing import Optional, List, Dict, Union
+from threading import Thread
+from typing import Dict, List, Optional, Union
 
 from .batch import Batch
 from .enums import NodeType, NodeStatus, BatchStatus
@@ -32,7 +32,7 @@ class Node(ABC):
         self._output_queues = []
 
         self._memory = Memory()
-        self._shared_memory = SharedMemory().shared_memory
+        self._shared_memory = SharedMemory.get_shared_memory()
         self._metrics = dict(duration=deque([0], maxlen=100), input=0, output=0)
         self._timeout = timeout
 
