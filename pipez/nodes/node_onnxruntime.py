@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import Optional, List, Dict, Tuple, Any, Union
-import onnxruntime
-import numpy as np
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import cv2
+import numpy as np
+import onnxruntime
 
 from ..core.batch import Batch
 from ..core.node import Node
@@ -13,9 +14,6 @@ def resize(
         size: Tuple[int, int],
         pad_value: int = 0
 ) -> np.ndarray:
-    """
-    Алгоритм изменения размеров изображений
-    """
     h, w, c = image.shape
 
     if (h, w) == (size[0], size[1]):
@@ -33,7 +31,7 @@ def resize(
     return image_padded
 
 
-class SyncORT(Node, ABC):
+class NodeONNXRuntime(Node, ABC):
     def __init__(
             self,
             model_path: str,
