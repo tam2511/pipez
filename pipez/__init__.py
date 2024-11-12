@@ -1,11 +1,11 @@
-from .core import Batch, NodeType, BatchStatus, Node, Watchdog
+from .core import Batch, BatchStatus, Node, NodeType, Watchdog
 from .nodes import NodeFastAPI, NodeONNXRuntime
 
 __all__ = [
     'Batch',
-    'NodeType',
     'BatchStatus',
     'Node',
+    'NodeType',
     'Watchdog',
     'NodeFastAPI',
     'NodeONNXRuntime'

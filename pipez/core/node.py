@@ -8,7 +8,7 @@ from threading import Thread
 from typing import Dict, List, Optional, Union
 
 from .batch import Batch
-from .enums import NodeType, NodeStatus, BatchStatus
+from .enums import BatchStatus, NodeStatus, NodeType
 from .memory import Memory
 from .queue_wrapper import QueueWrapper
 from .shared_memory import SharedMemory
