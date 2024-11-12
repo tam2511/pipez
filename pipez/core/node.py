@@ -10,7 +10,7 @@ from typing import Dict, List, Optional, Union
 from .batch import Batch
 from .enums import BatchStatus, NodeStatus, NodeType
 from .memory import Memory
-from .queue_wrapper import QueueWrapper
+from .queue import Queue
 from .shared_memory import SharedMemory
 
 
@@ -69,11 +69,11 @@ class Node(ABC):
         return self._output
 
     @property
-    def input_queues(self) -> List[QueueWrapper]:
+    def input_queues(self) -> List[Queue]:
         return self._input_queues
 
     @property
-    def output_queues(self) -> List[QueueWrapper]:
+    def output_queues(self) -> List[Queue]:
         return self._output_queues
 
     @property

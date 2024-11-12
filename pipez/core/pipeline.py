@@ -1,41 +1,43 @@
-import os
-import time
-import signal
+import importlib.resources
 import logging
+import os
+import signal
+import time
 from datetime import datetime
 from statistics import mean, pstdev
-from pathlib import Path
-import importlib.resources
-
-from typing import Optional, List
 from threading import Thread
-from fastapi import FastAPI, APIRouter, Request
-from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
+from typing import List, Optional
+
 import uvicorn
+from fastapi import APIRouter, FastAPI, Request
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
 from .batch import Batch
-from .enums import NodeType, BatchStatus
+from .enums import BatchStatus, NodeType
 from .node import Node
-from .queue_wrapper import QueueWrapper
-import pipez.resources
+from .queue import Queue
 
 
-class Monitoring(Node):
+class Watchdog(Node):
     def __init__(self, **kwargs):
         super().__init__(node_type=NodeType.PROCESS, timeout=10.0, **kwargs)
 
     def processing(self, data: Optional[Batch]) -> Optional[Batch]:
-        if time.time() - self.shared_memory.get('time', float('inf')) >= 3600.0:
+        if time.time() - self.shared_memory.get('time', float('inf')) >= 600.0:
             logging.info(f'{self.name}: os.kill(1, signal.SIGTERM)')
             os.kill(1, signal.SIGTERM)
 
-class Watchdog(Node):
+        return None
+
+
+class Pipeline(Node):
     def __init__(
             self,
-            pipeline: List[Node],
+            nodes: List[Node],
             *,
+            queue_maxsize: int = 16,
             verbose_metrics: bool = False,
             metrics_host: str = '0.0.0.0',
             metrics_port: int = 8080,
@@ -43,17 +45,18 @@ class Watchdog(Node):
     ):
         super().__init__(timeout=1.0, **kwargs)
         logging.getLogger().setLevel(logging.INFO)
-        self._pipeline = pipeline
+        self._nodes = nodes
+        self._queue_maxsize = queue_maxsize
         self._build_pipeline()
         self.start()
-        Monitoring().start()
+        Watchdog().start()
 
         if verbose_metrics:
-            directory = Path(importlib.resources.files(pipez.resources)) / 'templates'
-            self._templates = Jinja2Templates(directory=directory)
+            self._templates = Jinja2Templates(directory=importlib.resources.files('pipez.resources') / 'templates')
             app = FastAPI()
-            directory = Path(importlib.resources.files(pipez.resources)) / 'static'
-            app.mount('/static', StaticFiles(directory=directory, html=True), 'static')
+            app.mount(path='/static',
+                      app=StaticFiles(directory=importlib.resources.files('pipez.resources') / 'static', html=True),
+                      name='static')
             router = APIRouter()
             router.add_api_route('/metrics_html', self._metrics_html, methods=['GET'], response_class=HTMLResponse)
             router.add_api_route('/metrics_json', self._metrics_json, methods=['GET'])
@@ -66,7 +69,7 @@ class Watchdog(Node):
     def _metrics_json(self):
         metrics = []
 
-        for node in self._pipeline:
+        for node in self._nodes:
             metrics.append(dict(name=node.name,
                                 input=node.metrics['input'],
                                 output=node.metrics['output'],
@@ -78,14 +81,14 @@ class Watchdog(Node):
     def _build_pipeline(self):
         queues = {}
 
-        for node in self._pipeline:
+        for node in self._nodes:
             for queue in node.input + node.output:
                 if queue in queues:
                     continue
 
-                queues[queue] = QueueWrapper(name=queue, type=node.node_type, maxsize=16)
+                queues[queue] = Queue(name=queue, node_type=node.node_type, maxsize=self._queue_maxsize)
 
-        for node in self._pipeline:
+        for node in self._nodes:
             for queue in node.input:
                 node.input_queues.append(queues[queue])
 
@@ -97,16 +100,18 @@ class Watchdog(Node):
     def processing(self, data: Optional[Batch]) -> Optional[Batch]:
         self.shared_memory['time'] = time.time()
 
-        if all(node.is_completed for node in self._pipeline):
+        if all(node.is_completed for node in self._nodes):
             logging.info(f'{self.name}: All nodes finished successfully')
 
             return Batch(status=BatchStatus.LAST)
 
-        elif any(node.is_terminated for node in self._pipeline):
+        if any(node.is_terminated for node in self._nodes):
             logging.info(f'{self.name}: At least one of the nodes has terminated')
 
-            for node in self._pipeline:
+            for node in self._nodes:
                 node.drain()
                 logging.info(f'{node.name}: Draining')
 
             return Batch(status=BatchStatus.LAST)
+
+        return None

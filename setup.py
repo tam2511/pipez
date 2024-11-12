@@ -4,7 +4,7 @@ from os.path import join, dirname
 
 setup(
     name='pipez',
-    version='0.0.127',
+    version='0.0.128',
     author="Alexander Timofeev",
     author_email="tam2511@mail.ru",
     python_requires=">=3.9",
