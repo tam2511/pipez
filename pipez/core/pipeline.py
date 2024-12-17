@@ -15,7 +15,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from .batch import Batch
-from .enums import BatchStatus, NodeType
+from .enums import NodeStatus, NodeType
 from .node import Node
 from .queue import Queue
 
@@ -73,8 +73,8 @@ class Pipeline(Node):
             metrics.append(dict(name=node.name,
                                 input=node.metrics['input'],
                                 output=node.metrics['output'],
-                                duration_mean_ms=f"{mean(node.metrics['duration']) * 1000:.2f}",
-                                duration_std_ms=f"{pstdev(node.metrics['duration']) * 1000:.2f}"))
+                                mean_execution_time=f"{mean(node.metrics['execution_time']) * 1000:.2f}",
+                                pstdev_execution_time=f"{pstdev(node.metrics['execution_time']) * 1000:.2f}"))
 
         return dict(current_time=datetime.now().strftime('%Y-%m-%d %H:%M:%S'), metrics=metrics)
 
@@ -101,17 +101,17 @@ class Pipeline(Node):
         self.shared_memory['time'] = time.time()
 
         if all(node.is_completed for node in self._nodes):
-            logging.info(f'{self.name}: All nodes finished successfully')
+            logging.info(f'{self.name}: AllNodesCompleted')
 
-            return Batch(status=BatchStatus.LAST)
+            self._status = NodeStatus.COMPLETED
 
-        if any(node.is_terminated for node in self._nodes):
-            logging.info(f'{self.name}: At least one of the nodes has terminated')
+        elif any(node.is_terminated for node in self._nodes):
+            logging.info(f'{self.name}: AtLeastOneNodeTerminated')
 
             for node in self._nodes:
                 node.drain()
-                logging.info(f'{node.name}: Draining')
+                logging.info(f'{node.name}: NodeDrained')
 
-            return Batch(status=BatchStatus.LAST)
+            self._status = NodeStatus.COMPLETED
 
         return None

@@ -33,7 +33,7 @@ class Node(ABC):
 
         self._memory = Memory()
         self._shared_memory = SharedMemory.get_shared_memory()
-        self._metrics = dict(duration=deque([0], maxlen=100), input=0, output=0)
+        self._metrics = dict(execution_time=deque([0.0], maxlen=100), input=0, output=0)
         self._timeout = timeout
 
     @property
@@ -99,6 +99,13 @@ class Node(ABC):
         elif self._node_type == NodeType.PROCESS:
             Process(target=self._run, name=self._name).start()
 
+    def drain(self):
+        self._status = NodeStatus.TERMINATED
+
+        for queue in self._input_queues + self._output_queues:
+            while not queue.empty():
+                queue.get()
+
     def post_init(self):
         pass
 
@@ -109,96 +116,83 @@ class Node(ABC):
         self.post_init()
 
         while self._status == NodeStatus.ACTIVE:
-            input = self._get()
+            if not self._input_queues:
+                input = None
+            elif len(self._input_queues) == 1:
+                input = self._input_queues[0].get()
+            elif len(self._input_queues) > 1:
+                batches = [queue.get() for queue in self._input_queues]
 
-            if isinstance(input, Batch):
-                if input.is_last:
-                    self._put(input)
-                    self._status = NodeStatus.COMPLETED
-                    break
-                elif input.is_error:
-                    logging.error(f'{self.name}: {input.error}')
+                if any(len(batch) != len(batches[0]) for batch in batches):
+                    logging.error(f'{self.name}: BatchLengthMismatchError')
                     self._status = NodeStatus.TERMINATED
                     break
 
-            output = self._step(input)
+                if all(batch.is_ok for batch in batches):
+                    status = BatchStatus.OK
+                elif all(batch.is_last for batch in batches):
+                    status = BatchStatus.LAST
+                else:
+                    logging.error(f'{self.name}: BatchStatusMismatchError')
+                    self._status = NodeStatus.TERMINATED
+                    break
+
+                input = Batch(status=status)
+
+                for idx in range(len(batches[0])):
+                    input.append({
+                        queue.name: batch[idx]
+                        for queue, batch in zip(self._input_queues, batches)
+                    })
+
+                for batch in batches:
+                    input.metadata.update(batch.metadata)
+
+            try:
+                start_time = time.perf_counter()
+                output = self.processing(input)
+                end_time = time.perf_counter()
+                self._metrics['execution_time'].append(end_time - start_time)
+                self._metrics['input'] += len(input) if isinstance(input, Batch) else 0
+                self._metrics['output'] += len(output) if isinstance(output, Batch) else 0
+            except Exception as e:
+                logging.error(f'{self.name}: {e.__class__} {e}', exc_info=True)
+                self._status = NodeStatus.TERMINATED
+                break
+
+            if (
+                (output is None and self._output_queues) or
+                (isinstance(output, Batch) and not self._output_queues)
+            ):
+                logging.error(f'{self.name}: NodeOutputMismatchError')
+                self._status = NodeStatus.TERMINATED
+                break
+
+            if (
+                isinstance(input, Batch) and isinstance(output, Batch) and
+                (
+                    (input.is_ok and output.is_last) or
+                    (input.is_last and output.is_ok)
+                )
+            ):
+                logging.error(f'{self.name}: BatchStatusMismatchError')
+                self._status = NodeStatus.TERMINATED
+                break
 
             if isinstance(output, Batch):
-                if output.is_ok:
-                    self._put(output)
-                elif output.is_last:
-                    self._put(output)
-                    self._status = NodeStatus.COMPLETED
-                    break
-                elif output.is_error:
-                    # logging.error(f'{self.name}: {output.error}')
-                    self._status = NodeStatus.TERMINATED
-                    break
+                for queue in self._output_queues:
+                    queue.put(output)
+
+            if (
+                (isinstance(input, Batch) and input.is_last) or
+                (isinstance(output, Batch) and output.is_last)
+            ):
+                self._status = NodeStatus.COMPLETED
+                break
 
             time.sleep(self._timeout)
 
         self.release()
-
-    def _get(self) -> Optional[Batch]:
-        if not self._input_queues:
-            return None
-
-        if len(self._input_queues) == 1:
-            return self._input_queues[0].get()
-
-        batches = [queue.get() for queue in self._input_queues]
-
-        if len(set(len(batch) for batch in batches)) != 1:
-            return Batch(status=BatchStatus.ERROR, error='Length batches cannot be different')
-
-        if all(batch.is_ok for batch in batches):
-            status = BatchStatus.OK
-        elif all(batch.is_end for batch in batches):
-            status = BatchStatus.LAST
-        else:
-            return Batch(status=BatchStatus.ERROR, error='Batches cannot have different status')
-
-        metadata = {}
-
-        for batch in batches:
-            metadata.update(batch.metadata)
-
-        data = [
-            {
-                queue.name: batch[idx]
-                for queue, batch in zip(self._input_queues, batches)
-            }
-            for idx in range(len(batches[0]))
-        ]
-
-        return Batch(data=data, metadata=metadata, status=status)
-
-    def _step(self, input: Optional[Batch]) -> Optional[Batch]:
-        try:
-            monotonic = time.monotonic()
-            output = self.processing(input)
-            self._metrics['duration'].append(time.monotonic() - monotonic)
-            self._metrics['input'] += len(input) if isinstance(input, Batch) else 0
-            self._metrics['output'] += len(output) if isinstance(output, Batch) else 0
-        except Exception as e:
-            logging.error(f'{self.name}: {e.__class__} {e}', exc_info=True)
-            output = Batch(status=BatchStatus.ERROR, error=f'During processing raise exception {e.__class__} {e}')
-
-        return output
-
-    def _put(self, output: Batch):
-        if not self._output_queues:
-            return
-
-        for queue in self._output_queues:
-            queue.put(output)
-
-    def drain(self):
-        self._status = NodeStatus.TERMINATED
-
-        for queue in self._input_queues + self._output_queues:
-            while not queue.empty():
-                queue.get()
 
     @abstractmethod
     def processing(self, data: Optional[Batch]) -> Optional[Batch]:

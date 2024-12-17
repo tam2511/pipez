@@ -16,4 +16,3 @@ class NodeStatus(Enum):
 class BatchStatus(Enum):
     OK = auto()
     LAST = auto()
-    ERROR = auto()

@@ -8,13 +8,11 @@ class Batch:
             self,
             data: Optional[List[Any]] = None,
             metadata: Optional[Dict] = None,
-            status: BatchStatus = BatchStatus.OK,
-            error: Optional[str] = None
+            status: BatchStatus = BatchStatus.OK
     ):
         self._data = data.copy() if data else []
         self._metadata = metadata.copy() if metadata else {}
         self._status = status
-        self._error = error
 
     @property
     def metadata(self) -> Optional[Dict]:
@@ -27,14 +25,6 @@ class Batch:
     @property
     def is_last(self) -> bool:
         return self._status == BatchStatus.LAST
-
-    @property
-    def is_error(self) -> bool:
-        return self._status == BatchStatus.ERROR
-
-    @property
-    def error(self) -> Optional[str]:
-        return self._error
 
     def __len__(self) -> int:
         return len(self._data)
