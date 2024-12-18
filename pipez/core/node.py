@@ -120,7 +120,7 @@ class Node(ABC):
                 input = None
             elif len(self._input_queues) == 1:
                 input = self._input_queues[0].get()
-            elif len(self._input_queues) > 1:
+            else:
                 batches = [queue.get() for queue in self._input_queues]
 
                 if any(len(batch) != len(batches[0]) for batch in batches):

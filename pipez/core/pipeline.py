@@ -25,7 +25,7 @@ class Watchdog(Node):
         super().__init__(node_type=NodeType.PROCESS, timeout=10.0, **kwargs)
 
     def processing(self, data: Optional[Batch]) -> Optional[Batch]:
-        if time.time() - self.shared_memory.get('time', float('inf')) >= 600.0:
+        if time.time() - self.shared_memory.get('time', float('inf')) >= 120.0:
             logging.info(f'{self.name}: os.kill(1, signal.SIGTERM)')
             os.kill(1, signal.SIGTERM)
 

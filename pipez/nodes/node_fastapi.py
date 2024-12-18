@@ -48,3 +48,5 @@ class NodeFastAPI(Node, ABC):
         self.add_api_routes()
         self._app.include_router(self._router)
         uvicorn.run(self._app, host=self._host, port=self._port)
+
+        return None
