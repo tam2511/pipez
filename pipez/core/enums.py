@@ -8,7 +8,7 @@ class NodeType(Enum):
 
 class NodeStatus(Enum):
     PENDING = auto()
-    ACTIVE = auto()
+    ALIVE = auto()
     COMPLETED = auto()
     TERMINATED = auto()
 

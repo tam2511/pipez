@@ -49,8 +49,8 @@ class Node(ABC):
         return self._status == NodeStatus.PENDING
 
     @property
-    def is_active(self) -> bool:
-        return self._status == NodeStatus.ACTIVE
+    def is_alive(self) -> bool:
+        return self._status == NodeStatus.ALIVE
 
     @property
     def is_completed(self) -> bool:
@@ -92,7 +92,7 @@ class Node(ABC):
         if self._status != NodeStatus.PENDING:
             raise RuntimeError
 
-        self._status = NodeStatus.ACTIVE
+        self._status = NodeStatus.ALIVE
 
         if self._node_type == NodeType.THREAD:
             Thread(target=self._run, name=self._name).start()
@@ -115,7 +115,7 @@ class Node(ABC):
     def _run(self):
         self.post_init()
 
-        while self._status == NodeStatus.ACTIVE:
+        while self._status == NodeStatus.ALIVE:
             if not self._input_queues:
                 input = None
             elif len(self._input_queues) == 1:
