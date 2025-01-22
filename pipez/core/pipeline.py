@@ -109,8 +109,8 @@ class Pipeline(Node):
             logging.info(f'{self.name}: AtLeastOneNodeTerminated')
 
             for node in self._nodes:
-                node.drain()
-                logging.info(f'{node.name}: NodeDrained')
+                node.terminate()
+                logging.info(f'{node.name}: NodeTerminated')
 
             self._status = NodeStatus.COMPLETED
 

@@ -99,7 +99,7 @@ class Node(ABC):
         elif self._node_type == NodeType.PROCESS:
             Process(target=self._run, name=self._name).start()
 
-    def drain(self):
+    def terminate(self):
         self._status = NodeStatus.TERMINATED
 
         for queue in self._input_queues + self._output_queues:
@@ -169,11 +169,9 @@ class Node(ABC):
                 break
 
             if (
-                isinstance(input, Batch) and isinstance(output, Batch) and
-                (
-                    (input.is_ok and output.is_last) or
-                    (input.is_last and output.is_ok)
-                )
+                isinstance(input, Batch) and
+                isinstance(output, Batch) and
+                ((input.is_ok and output.is_last) or (input.is_last and output.is_ok))
             ):
                 logging.error(f'{self.name}: BatchStatusMismatchError')
                 self._status = NodeStatus.TERMINATED
