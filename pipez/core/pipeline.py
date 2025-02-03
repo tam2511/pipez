@@ -4,6 +4,7 @@ import os
 import signal
 import time
 from datetime import datetime
+from queue import Queue
 from statistics import mean, pstdev
 from threading import Thread
 from typing import List, Optional
@@ -17,7 +18,6 @@ from fastapi.templating import Jinja2Templates
 from .batch import Batch
 from .enums import NodeStatus, NodeType
 from .node import Node
-from .queue import Queue
 
 
 class Watchdog(Node):
@@ -86,7 +86,7 @@ class Pipeline(Node):
                 if queue in queues:
                     continue
 
-                queues[queue] = Queue(name=queue, node_type=node.node_type, maxsize=self._queue_maxsize)
+                queues[queue] = Queue(maxsize=self._queue_maxsize)
 
         for node in self._nodes:
             for queue in node.input:
