@@ -4,13 +4,13 @@ from abc import ABC, abstractmethod
 from collections import deque
 from multiprocessing import Process
 from multiprocessing.managers import DictProxy
-from queue import Queue
 from threading import Thread
 from typing import Dict, List, Optional, Union
 
 from .batch import Batch
 from .enums import BatchStatus, NodeStatus, NodeType
 from .memory import Memory
+from .queue import Queue
 from .shared_memory import SharedMemory
 
 
