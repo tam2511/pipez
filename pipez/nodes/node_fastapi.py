@@ -24,10 +24,6 @@ class NodeFastAPI(Node, ABC):
         super().__init__(**kwargs)
         self._host = host
         self._port = port
-        self._app = None
-        self._router = None
-
-    def post_init(self):
         self._app = FastAPI(docs_url=None, redoc_url=None)
         self._router = APIRouter()
 
