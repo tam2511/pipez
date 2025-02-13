@@ -37,3 +37,6 @@ class Memory:
 
     def keys(self):
         return self._data.keys()
+
+    def values(self):
+        return self._data.values()
