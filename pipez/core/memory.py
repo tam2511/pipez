@@ -34,3 +34,6 @@ class Memory:
 
     def __str__(self) -> str:
         return str(self._data)
+
+    def keys(self):
+        return self._data.keys()
