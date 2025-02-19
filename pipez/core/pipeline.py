@@ -45,31 +45,31 @@ class Pipeline(Node):
     ):
         super().__init__(timeout=1.0, **kwargs)
         logging.getLogger().setLevel(logging.INFO)
-        self._nodes = nodes
-        self._queue_maxsize = queue_maxsize
-        self._build_pipeline()
+        self.nodes = nodes
+        self.queue_maxsize = queue_maxsize
+        self.build_pipeline()
         self.start()
         Watchdog().start()
 
         if verbose_metrics:
-            self._templates = Jinja2Templates(directory=importlib.resources.files('pipez.resources') / 'templates')
+            self.templates = Jinja2Templates(directory=importlib.resources.files('pipez.resources') / 'templates')
             app = FastAPI()
             app.mount(path='/static',
                       app=StaticFiles(directory=importlib.resources.files('pipez.resources') / 'static', html=True),
                       name='static')
             router = APIRouter()
-            router.add_api_route('/metrics_html', self._metrics_html, methods=['GET'], response_class=HTMLResponse)
-            router.add_api_route('/metrics_json', self._metrics_json, methods=['GET'])
+            router.add_api_route('/metrics_html', self.metrics_html, methods=['GET'], response_class=HTMLResponse)
+            router.add_api_route('/metrics_json', self.metrics_json, methods=['GET'])
             app.include_router(router)
             Thread(target=uvicorn.run, kwargs=dict(app=app, host=metrics_host, port=metrics_port)).start()
 
-    def _metrics_html(self, request: Request):
-        return self._templates.TemplateResponse('home.html', dict(request=request))
+    def metrics_html(self, request: Request):
+        return self.templates.TemplateResponse('home.html', dict(request=request))
 
-    def _metrics_json(self):
+    def metrics_json(self):
         metrics = []
 
-        for node in self._nodes:
+        for node in self.nodes:
             metrics.append(dict(name=node.name,
                                 input=node.metrics['input'],
                                 output=node.metrics['output'],
@@ -78,17 +78,17 @@ class Pipeline(Node):
 
         return dict(current_time=datetime.now().strftime('%Y-%m-%d %H:%M:%S'), metrics=metrics)
 
-    def _build_pipeline(self):
+    def build_pipeline(self):
         queues = {}
 
-        for node in self._nodes:
+        for node in self.nodes:
             for queue in node.input + node.output:
                 if queue in queues:
                     continue
 
-                queues[queue] = Queue(name=queue, maxsize=self._queue_maxsize)
+                queues[queue] = Queue(name=queue, maxsize=self.queue_maxsize)
 
-        for node in self._nodes:
+        for node in self.nodes:
             for queue in node.input:
                 node.input_queues.append(queues[queue])
 
@@ -100,18 +100,18 @@ class Pipeline(Node):
     def processing(self, data: Optional[Batch]) -> Optional[Batch]:
         self.shared_memory['time'] = time.time()
 
-        if all(node.is_completed for node in self._nodes):
+        if all(node.is_completed for node in self.nodes):
             logging.info(f'{self.name}: AllNodesCompleted')
 
-            self._status = NodeStatus.COMPLETED
+            self.status = NodeStatus.COMPLETED
 
-        elif any(node.is_terminated for node in self._nodes):
+        elif any(node.is_terminated for node in self.nodes):
             logging.info(f'{self.name}: AtLeastOneNodeTerminated')
 
-            for node in self._nodes:
+            for node in self.nodes:
                 node.terminate()
                 logging.info(f'{node.name}: NodeTerminated')
 
-            self._status = NodeStatus.COMPLETED
+            self.status = NodeStatus.COMPLETED
 
         return None

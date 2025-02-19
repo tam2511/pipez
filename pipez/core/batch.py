@@ -10,42 +10,38 @@ class Batch:
             metadata: Optional[Dict] = None,
             status: BatchStatus = BatchStatus.OK
     ):
-        self._data = data.copy() if data else []
-        self._metadata = metadata.copy() if metadata else {}
-        self._status = status
-
-    @property
-    def metadata(self) -> Optional[Dict]:
-        return self._metadata
+        self.data = data.copy() if data else []
+        self.metadata = metadata.copy() if metadata else {}
+        self.status = status
 
     @property
     def is_ok(self) -> bool:
-        return self._status == BatchStatus.OK
+        return self.status == BatchStatus.OK
 
     @property
     def is_last(self) -> bool:
-        return self._status == BatchStatus.LAST
+        return self.status == BatchStatus.LAST
 
     def __len__(self) -> int:
-        return len(self._data)
+        return len(self.data)
 
     def __iter__(self):
-        return iter(self._data)
+        return iter(self.data)
 
     def __getitem__(self, index: int) -> Any:
-        return self._data[index]
+        return self.data[index]
 
     def __setitem__(self, index: int, value: Any) -> None:
-        self._data[index] = value
+        self.data[index] = value
 
     def __delitem__(self, index: int) -> None:
-        del self._data[index]
+        del self.data[index]
 
     def __str__(self) -> str:
-        return str(self._data)
+        return str(self.data)
 
     def append(self, item: Any) -> None:
-        self._data.append(item)
+        self.data.append(item)
 
     def extend(self, iterable: List[Any]) -> None:
-        self._data.extend(iterable)
+        self.data.extend(iterable)

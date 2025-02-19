@@ -9,18 +9,18 @@ class Queue:
             name: str,
             maxsize: int = 0
     ):
-        self._name = name
-        self._queue = queue.Queue(maxsize=maxsize)
+        self.name = name
+        self.queue = queue.Queue(maxsize=maxsize)
 
     @property
     def name(self) -> str:
-        return self._name
+        return self.name
 
     def empty(self) -> bool:
-        return self._queue.empty()
+        return self.queue.empty()
 
     def put(self, item: Batch) -> None:
-        self._queue.put(item)
+        self.queue.put(item)
 
     def get(self) -> Batch:
-        return self._queue.get()
+        return self.queue.get()
