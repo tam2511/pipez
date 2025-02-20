@@ -12,10 +12,6 @@ class Queue:
         self.name = name
         self.queue = queue.Queue(maxsize=maxsize)
 
-    @property
-    def name(self) -> str:
-        return self.name
-
     def empty(self) -> bool:
         return self.queue.empty()
 
