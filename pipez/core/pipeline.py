@@ -73,8 +73,8 @@ class Pipeline(Node):
             metrics.append(dict(name=node.name,
                                 input=node.metrics['input'],
                                 output=node.metrics['output'],
-                                mean_execution_time=f"{mean(node.metrics['execution_time']) * 1000:.2f}",
-                                pstdev_execution_time=f"{pstdev(node.metrics['execution_time']) * 1000:.2f}"))
+                                mean_execution_time=f"{mean(node.metrics['time']) * 1000:.2f}",
+                                pstdev_execution_time=f"{pstdev(node.metrics['time']) * 1000:.2f}"))
 
         return dict(current_time=datetime.now().strftime('%Y-%m-%d %H:%M:%S'), metrics=metrics)
 

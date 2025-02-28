@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='pipez',
-    version='0.0.141',
+    version='0.0.142',
     python_requires='>=3.9',
     install_requires=[
         'fastapi',
