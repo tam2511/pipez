@@ -39,7 +39,7 @@ class Node(ABC):
 
         self.memory = Memory()
         self.shared_memory = SharedMemory.get_shared_memory()
-        self.metrics = dict(time=deque(maxlen=100), input=0, output=0)
+        self.metrics = dict(time=deque([0.0], maxlen=100), input=0, output=0)
         self.timeout = timeout
 
     @property
