@@ -37,7 +37,7 @@ class Pipeline(Node):
             self,
             nodes: List[Node],
             *,
-            queue_maxsize: int = 16,
+            queue_maxsize: int = 8,
             verbose_metrics: bool = False,
             metrics_host: str = '0.0.0.0',
             metrics_port: int = 8080,
