@@ -5,12 +5,13 @@ from setuptools import find_packages, setup
 
 setup(
     name='pipez',
-    version='0.0.145',
+    version='0.0.146',
     python_requires='>=3.9',
     install_requires=[
         'fastapi',
         'Jinja2',
         'numpy',
+        'pydantic',
         'uvicorn'
     ],
     long_description=open(join(dirname(__file__), 'README.md')).read(),

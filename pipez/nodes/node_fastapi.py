@@ -1,17 +1,23 @@
 import importlib.resources
+import json
 import logging
 from abc import ABC
 from typing import Optional
 
 import uvicorn
 from fastapi import FastAPI, Request
-from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html, get_swagger_ui_oauth2_redirect_html
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 
 from ..core.batch import Batch
 from ..core.node import Node
+
+
+class UnprocessableEntityResponse(BaseModel):
+    detail: str
 
 
 class NodeFastAPI(Node, ABC):
@@ -24,7 +30,9 @@ class NodeFastAPI(Node, ABC):
         super().__init__(**kwargs)
         self.host = host
         self.port = port
-        self.app = FastAPI(docs_url=None, redoc_url=None)
+        self.app = FastAPI(docs_url=None,
+                           redoc_url=None,
+                           responses={422: {'model': UnprocessableEntityResponse}})
 
         self.app.mount('/static',
                        StaticFiles(directory=importlib.resources.files('pipez.resources') / 'fastapi'),
@@ -51,7 +59,7 @@ class NodeFastAPI(Node, ABC):
         @self.app.exception_handler(RequestValidationError)
         async def validation_exception_handler(request: Request, exc: RequestValidationError):
             logging.error(exc.errors())
-            return await request_validation_exception_handler(request, exc)
+            return JSONResponse(dict(detail=json.dumps(exc.errors(), ensure_ascii=False)), 422)
 
     def processing(self, data: Optional[Batch]) -> Optional[Batch]:
         uvicorn.run(self.app, host=self.host, port=self.port)
