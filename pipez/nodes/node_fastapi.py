@@ -16,7 +16,7 @@ from ..core.batch import Batch
 from ..core.node import Node
 
 
-class UnprocessableEntityResponse(BaseModel):
+class DetailResponse(BaseModel):
     detail: str
 
 
@@ -32,7 +32,8 @@ class NodeFastAPI(Node, ABC):
         self.port = port
         self.app = FastAPI(docs_url=None,
                            redoc_url=None,
-                           responses={422: {'model': UnprocessableEntityResponse}})
+                           responses={422: dict(model=DetailResponse),
+                                      500: dict(model=DetailResponse)})
 
         self.app.mount('/static',
                        StaticFiles(directory=importlib.resources.files('pipez.resources') / 'fastapi'),
@@ -60,6 +61,10 @@ class NodeFastAPI(Node, ABC):
         async def validation_exception_handler(request: Request, exc: RequestValidationError):
             logging.error(exc.errors())
             return JSONResponse(dict(detail=json.dumps(exc.errors(), ensure_ascii=False)), 422)
+
+        @self.app.exception_handler(Exception)
+        async def general_exception_handler(request: Request, exc: Exception):
+            return JSONResponse(dict(detail=exc.__class__.__name__), 500)
 
     def processing(self, data: Optional[Batch]) -> Optional[Batch]:
         uvicorn.run(self.app, host=self.host, port=self.port)
