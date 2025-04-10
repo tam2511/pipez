@@ -73,6 +73,8 @@ class NodeFastAPI(Node, ABC):
             return JSONResponse(dict(detail=exc.__class__.__name__), 500)
 
     def processing(self, data: Optional[Batch]) -> Optional[Batch]:
-        uvicorn.run(self.app, host=self.host, port=self.port)
+        uvicorn.run(app=self.app,
+                    host=self.host,
+                    port=self.port)
 
         return None

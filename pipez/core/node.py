@@ -77,7 +77,7 @@ class Node(ABC):
                 queue.get()
 
         if isinstance(self.worker, Process):
-            self.worker.terminate()
+            self.worker.kill()
 
         self.release()
         self.status = NodeStatus.TERMINATED
