@@ -1,9 +1,9 @@
 import logging
+import multiprocessing
+import threading
 import time
 from abc import ABC, abstractmethod
 from collections import deque
-from multiprocessing import Process, get_context
-from threading import Thread
 from typing import List, Optional, Union
 
 from .batch import Batch
@@ -28,9 +28,13 @@ class Node(ABC):
         self.status = NodeStatus.PENDING
 
         if node_type == NodeType.THREAD:
-            self.worker = Thread(target=self.run, name=self.name, daemon=True)
+            self.worker = threading.Thread(target=self.run,
+                                           name=self.name,
+                                           daemon=True)
         elif node_type == NodeType.PROCESS:
-            self.worker = get_context('spawn').Process(target=self.run, name=self.name, daemon=True)
+            self.worker = multiprocessing.get_context('spawn').Process(target=self.run,
+                                                                       name=self.name,
+                                                                       daemon=True)
 
         self.input = [] if input is None else [input] if isinstance(input, str) else input
         self.output = [] if output is None else [output] if isinstance(output, str) else output
@@ -76,8 +80,8 @@ class Node(ABC):
             while not queue.empty():
                 queue.get()
 
-        if isinstance(self.worker, Process):
-            self.worker.kill()
+        if isinstance(self.worker, multiprocessing.context.SpawnProcess):
+            self.worker.terminate()
 
         self.release()
         self.status = NodeStatus.TERMINATED
