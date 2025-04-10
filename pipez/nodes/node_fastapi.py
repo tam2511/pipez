@@ -60,13 +60,7 @@ class NodeFastAPI(Node, ABC):
         @self.app.exception_handler(RequestValidationError)
         async def validation_exception_handler(request: Request, exc: RequestValidationError):
             logging.error(exc.errors())
-            errors = []
-
-            for error in exc.errors():
-                del error['ctx']
-                errors.append(error)
-
-            return JSONResponse(dict(detail=json.dumps(errors, ensure_ascii=False)), 422)
+            return JSONResponse(dict(detail=json.dumps(exc.errors(), ensure_ascii=False)), 422)
 
         @self.app.exception_handler(Exception)
         async def general_exception_handler(request: Request, exc: Exception):
