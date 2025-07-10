@@ -120,10 +120,7 @@ class Node(ABC):
                 input = Batch(status=status)
 
                 for idx in range(len(batches[0])):
-                    input.append({
-                        queue.name: batch[idx]
-                        for queue, batch in zip(self.input_queues, batches)
-                    })
+                    input.append(tuple(batch[idx] for batch in batches))
 
                 for batch in batches:
                     input.metadata.update(batch.metadata)

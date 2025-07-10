@@ -36,11 +36,14 @@ class NodeONNXRuntime(Node, ABC):
         pass
 
     def processing(self, data: Optional[Batch]) -> Optional[Batch]:
-        if not data:
-            return data
-
         batch = Batch(metadata=data.metadata)
-        images, metadatas = zip(*(self.preprocessing(item) for item in data))
+        images = []
+        metadatas = []
+
+        for item in data:
+            image, metadata = self.preprocessing(item)
+            images.append(image)
+            metadatas.append(metadata)
 
         for i in range(0, len(images), self.batch_size):
             for batch_idx, image in enumerate(images[i: i + self.batch_size]):
