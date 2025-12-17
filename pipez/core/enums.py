@@ -10,7 +10,7 @@ class NodeStatus(Enum):
     PENDING = auto()
     ALIVE = auto()
     COMPLETED = auto()
-    TERMINATED = auto()
+    KILLED = auto()
 
 
 class BatchStatus(Enum):

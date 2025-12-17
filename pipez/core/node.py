@@ -59,8 +59,8 @@ class Node(ABC):
         return self.status == NodeStatus.COMPLETED
 
     @property
-    def is_terminated(self) -> bool:
-        return self.status == NodeStatus.TERMINATED
+    def is_killed(self) -> bool:
+        return self.status == NodeStatus.KILLED
 
     def start(self):
         if self.status != NodeStatus.PENDING:
@@ -69,10 +69,8 @@ class Node(ABC):
         self.status = NodeStatus.ALIVE
         self.worker.start()
 
-    def join(self):
-        self.worker.join()
-
-    def terminate(self):
+    def kill(self):
+        # self.status = NodeStatus.KILLED and release() in run()
         if self.status != NodeStatus.ALIVE:
             raise RuntimeError
 
@@ -81,10 +79,13 @@ class Node(ABC):
                 queue.get()
 
         if isinstance(self.worker, multiprocessing.context.SpawnProcess):
-            self.worker.terminate()
+            self.worker.kill()
 
         self.release()
-        self.status = NodeStatus.TERMINATED
+        self.status = NodeStatus.KILLED
+
+    def join(self):
+        self.worker.join()
 
     def post_init(self):
         pass
@@ -105,7 +106,7 @@ class Node(ABC):
 
                 if len(set(len(batch) for batch in batches)) > 1:
                     logging.error(f'{self.name}: BatchLengthMismatchError')
-                    self.status = NodeStatus.TERMINATED
+                    self.status = NodeStatus.KILLED
                     break
 
                 if all(batch.is_ok for batch in batches):
@@ -114,7 +115,7 @@ class Node(ABC):
                     status = BatchStatus.LAST
                 else:
                     logging.error(f'{self.name}: BatchStatusMismatchError')
-                    self.status = NodeStatus.TERMINATED
+                    self.status = NodeStatus.KILLED
                     break
 
                 input = Batch(status=status)
@@ -134,7 +135,7 @@ class Node(ABC):
                 self.metrics['output'] += len(output) if isinstance(output, Batch) else 0
             except Exception as e:
                 logging.error(f'{self.name}: {e.__class__} {e}', exc_info=True)
-                self.status = NodeStatus.TERMINATED
+                self.status = NodeStatus.KILLED
                 break
 
             if (
@@ -142,7 +143,7 @@ class Node(ABC):
                 (isinstance(output, Batch) and not self.output_queues)
             ):
                 logging.error(f'{self.name}: NodeOutputMismatchError')
-                self.status = NodeStatus.TERMINATED
+                self.status = NodeStatus.KILLED
                 break
 
             if (
@@ -151,7 +152,7 @@ class Node(ABC):
                 ((input.is_ok and output.is_last) or (input.is_last and output.is_ok))
             ):
                 logging.error(f'{self.name}: BatchStatusMismatchError')
-                self.status = NodeStatus.TERMINATED
+                self.status = NodeStatus.KILLED
                 break
 
             if isinstance(output, Batch):

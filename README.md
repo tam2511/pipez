@@ -1,4 +1,4 @@
 ## Authors
 
 - **Alexander Timofeev** [GitHub](https://github.com/tam2511)
-- **Vitaly Timofeev** [GitHub](https://github.com/pure7000)
+- **Vitaly Timofeev** [GitHub](https://github.com/gedeonwinter)

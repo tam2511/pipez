@@ -87,16 +87,17 @@ class Pipeline:
                 logging.info('Pipeline: AllNodesCompleted')
                 break
 
-            elif any(node.is_terminated for node in self.nodes):
-                logging.info('Pipeline: AnyNodeTerminated')
+            elif any(node.is_killed for node in self.nodes):
+                logging.info('Pipeline: AnyNodeKilled')
 
                 for node in self.nodes:
+                    # any node already killed without kill()
                     try:
-                        node.terminate()
+                        node.kill()
                     except RuntimeError:
                         pass
                     # node.join()
-                    logging.info(f'{node.name}: NodeTerminated')
+                    logging.info(f'{node.name}: NodeKilled')
 
                 break
 
