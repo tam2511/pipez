@@ -31,11 +31,11 @@ class NodeONNXRuntime(Node, ABC):
         self.batch = np.zeros((self.batch_size, self.channels, self.height, self.width), dtype=self.dtype)
 
     @abstractmethod
-    def preprocessing(self, item: Any) -> Tuple[np.ndarray, Any]:
+    def preprocessing(self, input):
         pass
 
     @abstractmethod
-    def postprocessing(self, output: List[Union[np.ndarray, np.generic]], metadata: Any) -> Any:
+    def postprocessing(self, output, metadata):
         pass
 
     def processing(self, data: Optional[Batch]) -> Optional[Batch]:
@@ -43,18 +43,18 @@ class NodeONNXRuntime(Node, ABC):
         images = []
         metadatas = []
 
-        for item in data:
-            image, metadata = self.preprocessing(item)
+        for input in data:
+            image, metadata = self.preprocessing(input)
             images.append(image)
             metadatas.append(metadata)
 
         for i in range(0, len(images), self.batch_size):
-            for batch_idx, image in enumerate(images[i: i + self.batch_size]):
+            for batch_idx, image in enumerate(images[i:i + self.batch_size]):
                 self.batch[batch_idx] = image
 
-            outputs = self.session.run(None, {self.input_name: self.batch})
+            outputs = self.session.run(None, {self.input_name: self.batch})[0]
 
-            for *output, metadata in zip(*outputs, metadatas[i: i + self.batch_size]):
+            for output, metadata in zip(outputs, metadatas[i:i + self.batch_size]):
                 batch.append(self.postprocessing(output, metadata))
 
         return batch
