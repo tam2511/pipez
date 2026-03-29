@@ -31,20 +31,20 @@ class NodeONNXRuntime(Node, ABC):
         self.batch = np.zeros((self.batch_size, self.channels, self.height, self.width), dtype=self.dtype)
 
     @abstractmethod
-    def preprocessing(self, input):
+    def preprocess(self, input):
         pass
 
     @abstractmethod
-    def postprocessing(self, output, metadata):
+    def postprocess(self, output, metadata):
         pass
 
-    def processing(self, data: Optional[Batch]) -> Optional[Batch]:
+    def process(self, data: Optional[Batch]) -> Optional[Batch]:
         batch = Batch(metadata=data.metadata)
         images = []
         metadatas = []
 
         for input in data:
-            image, metadata = self.preprocessing(input)
+            image, metadata = self.preprocess(input)
             images.append(image)
             metadatas.append(metadata)
 
@@ -55,6 +55,6 @@ class NodeONNXRuntime(Node, ABC):
             outputs = self.session.run(None, {self.input_name: self.batch})[0]
 
             for output, metadata in zip(outputs, metadatas[i:i + self.batch_size]):
-                batch.append(self.postprocessing(output, metadata))
+                batch.append(self.postprocess(output, metadata))
 
         return batch

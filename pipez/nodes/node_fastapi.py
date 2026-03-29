@@ -39,7 +39,7 @@ class NodeFastAPI(Node, ABC):
         async def swagger_ui_redirect():
             return get_swagger_ui_oauth2_redirect_html()
 
-    def processing(self, data: Optional[Batch]) -> Optional[Batch]:
+    def process(self, data: Optional[Batch]) -> Optional[Batch]:
         uvicorn.run(app=self.app,
                     host=self.host,
                     port=self.port)

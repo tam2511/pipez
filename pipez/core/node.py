@@ -128,7 +128,7 @@ class Node(ABC):
 
             try:
                 start_time = time.perf_counter()
-                output = self.processing(input)
+                output = self.process(input)
                 end_time = time.perf_counter()
                 self.metrics['time'].append(end_time - start_time)
                 self.metrics['input'] += len(input) if isinstance(input, Batch) else 0
@@ -170,5 +170,5 @@ class Node(ABC):
             time.sleep(self.timeout)
 
     @abstractmethod
-    def processing(self, data: Optional[Batch]) -> Optional[Batch]:
+    def process(self, data: Optional[Batch]) -> Optional[Batch]:
         pass
