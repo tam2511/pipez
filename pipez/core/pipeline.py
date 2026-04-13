@@ -22,13 +22,13 @@ class Pipeline:
             nodes: List[Node],
             *,
             queue_maxsize: int = 8,
-            expose_metrics: bool = False,
+            verbose_metrics: bool = False,
             metrics_host: str = '0.0.0.0',
             metrics_port: int = 8000
     ):
         self.nodes = nodes
         self.queue_maxsize = queue_maxsize
-        self.expose_metrics = expose_metrics
+        self.verbose_metrics = verbose_metrics
         self.metrics_host = metrics_host
         self.metrics_port = metrics_port
 
@@ -70,7 +70,7 @@ class Pipeline:
         logging.getLogger().setLevel(logging.INFO)
         self.build_pipeline()
 
-        if self.expose_metrics:
+        if self.verbose_metrics:
             self.templates = Jinja2Templates(directory=importlib.resources.files('pipez.resources') / 'templates')
             app = FastAPI()
             app.mount(path='/static',

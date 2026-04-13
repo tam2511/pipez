@@ -43,5 +43,5 @@ class Batch:
     def append(self, item: Any) -> None:
         self.data.append(item)
 
-    def extend(self, iterable: List[Any]) -> None:
+    def extend(self, iterable) -> None:
         self.data.extend(iterable)
