@@ -39,7 +39,7 @@ class NodeONNXRuntime(Node, ABC):
         pass
 
     def process(self, data: Optional[Batch]) -> Optional[Batch]:
-        batch = Batch(metadata=data.metadata)
+        batch = Batch(metadata=data.metadata, status=data.status)
         images = []
         metadatas = []
 

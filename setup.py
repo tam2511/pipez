@@ -1,11 +1,9 @@
-from os.path import dirname, join
-
 from setuptools import find_packages, setup
 
 
 setup(
     name='pipez',
-    version='0.0.159',
+    version='0.0.160',
     python_requires='>=3.10',
     install_requires=[
         'fastapi',
@@ -14,9 +12,6 @@ setup(
         'pydantic',
         'uvicorn'
     ],
-    long_description=open(join(dirname(__file__), 'README.md')).read(),
-    long_description_content_type='text/markdown',
-    url='https://github.com/tam2511/pipez',
     packages=find_packages(),
     classifiers=[
         'Programming Language :: Python :: 3.10',
